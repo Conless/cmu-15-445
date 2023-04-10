@@ -208,5 +208,12 @@ class BufferPoolManager {
   }
 
   // TODO(student): You may add additional private members and helper functions
+  /**
+   * @brief Get the Available Frame object 
+   * @param frame_id  with output frame
+   * @return true when find an available frame
+   * @return false when not found
+   */
+  auto FindFrame(frame_id_t *frame_id) -> bool;
 };
 }  // namespace bustub
