@@ -14,10 +14,11 @@
 
 #include <limits>
 #include <list>
-#include <mutex>  // NOLINT
-#include <unordered_map>
 #include <map>
+#include <mutex>  // NOLINT
 #include <queue>
+#include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "common/config.h"
