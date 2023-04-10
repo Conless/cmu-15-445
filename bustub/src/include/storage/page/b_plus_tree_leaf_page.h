@@ -57,7 +57,39 @@ class BPlusTreeLeafPage : public BPlusTreePage {
   // helper methods
   auto GetNextPageId() const -> page_id_t;
   void SetNextPageId(page_id_t next_page_id);
+
+  /**
+   *
+   * @param key the key to search for
+   */
+  auto KeyIndex(const KeyType &key, const KeyComparator &comparator) const -> int;
+
+  /**
+   * @param index The index of the key to get. Index must be non-zero.
+   * @return Key at index
+   */
   auto KeyAt(int index) const -> KeyType;
+
+  /**
+   *
+   * @param index The index of the key to set. Index must be non-zero.
+   * @param key The new value for key
+   */
+  void SetKeyAt(int index, const KeyType &key);
+
+  /**
+   *
+   * @param index the index
+   * @return the value at the index
+   */
+  auto ValueAt(int index) const -> ValueType;
+
+  /**
+   *
+   * @param index The index of the key to set. Index must be non-zero.
+   * @param value The new value
+   */
+  void SetValueAt(int index, const ValueType &value);
 
   /**
    * @brief for test only return a string representing all keys in
