@@ -26,6 +26,7 @@
 #include "storage/page/b_plus_tree_header_page.h"
 #include "storage/page/b_plus_tree_internal_page.h"
 #include "storage/page/b_plus_tree_leaf_page.h"
+#include "storage/page/b_plus_tree_page.h"
 #include "storage/page/page_guard.h"
 
 namespace bustub {
@@ -56,11 +57,15 @@ class Context {
   auto IsRootPage(page_id_t page_id) -> bool { return page_id == root_page_id_; }
 };
 
-#define BPLUSTREE_TYPE BPlusTree<KeyType, ValueType, KeyComparator>
+#define BPLUSTREE_TYPE BPlusTree<KeyType, ValueType, KeyComparator, true>
 
 // Main class providing the API for the Interactive B+ Tree.
+
+template <typename KeyType, typename ValueType, typename KeyComparator, bool isThreadSafe = true>
+class BPlusTree {};
+
 INDEX_TEMPLATE_ARGUMENTS
-class BPlusTree {
+class BPlusTree<KeyType, ValueType, KeyComparator, true> {
   using InternalPage = BPlusTreeInternalPage<KeyType, page_id_t, KeyComparator>;
   using LeafPage = BPlusTreeLeafPage<KeyType, ValueType, KeyComparator>;
 
