@@ -39,7 +39,7 @@ class BufferPoolManager {
    * @param log_manager the log manager (for testing only: nullptr = disable logging). Please ignore this for P1.
    */
   BufferPoolManager(size_t pool_size, DiskManager *disk_manager, size_t replacer_k = LRUK_REPLACER_K,
-                    LogManager *log_manager = nullptr);
+                    LogManager *log_manager = nullptr, bool is_thread_safe = true);
 
   /**
    * @brief Destroy an existing BufferPoolManager.
@@ -192,6 +192,8 @@ class BufferPoolManager {
   std::list<frame_id_t> free_list_;
   /** This latch protects shared data structures. We recommend updating this comment to describe what it protects. */
   std::mutex latch_;
+  /** Latch tag. */
+  bool is_thread_safe_;
 
   /**
    * @brief Allocate a page on disk. Caller should acquire the latch before calling this function.

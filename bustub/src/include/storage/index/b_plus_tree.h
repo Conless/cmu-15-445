@@ -121,6 +121,41 @@ class BPlusTree<KeyType, ValueType, KeyComparator, true> {
   // read data from file and remove one by one
   void RemoveFromFile(const std::string &file_name, Transaction *txn = nullptr);
 
+ protected:
+  auto CreateNewRoot(IndexPageType page_type) -> page_id_t;
+  auto CreateNewRoot(IndexPageType page_type, BPlusTreeHeaderPage *header_page) -> page_id_t;
+  /**
+   * @brief Create a New BPlusTreePage object with return value as its page_id. No latch permission is required.
+   * @param page_type INTERNAL_PAGE or LEAF_PAGE
+   * @return page_id_t
+   */
+  auto CreateNewPage(IndexPageType page_type) -> page_id_t;
+
+  /**
+   * @brief Get the guard of root page. Latch permission of the header page is needed.
+   *
+   * @param create_new_root whether to create a new root when there's no root
+   * @return WritePageGuard
+   */
+  auto GetRootGuard(bool create_new_root = false) -> WritePageGuard;
+  //   void SetRoot(page_id_t new_root_id);
+
+  /**
+   * @brief Insert the <key, value> pair into current page
+   * 
+   * @param cur_guard 
+   * @param key 
+   * @param value 
+   * @param ctx 
+   * @return true 
+   * @return false 
+   */
+  auto InsertIntoPage(WritePageGuard &cur_guard, const KeyType &key, const ValueType &value, Context *ctx) -> bool;
+  auto InsertIntoLeafPage(WritePageGuard &cur_guard, const KeyType &key, const ValueType &value, Context *ctx) -> bool;
+  auto SplitPage(BPlusTreePage *cur_page, InternalPage *last_page, int index) -> bool;
+  auto SplitLeafPage(LeafPage *cur_page, InternalPage *last_page, int index) -> bool;
+  auto SplitInternalPage(InternalPage *cur_page, InternalPage *last_page, int index) -> bool;
+
  private:
   /* Debug Routines for FREE!! */
   void ToGraph(page_id_t page_id, const BPlusTreePage *page, std::ofstream &out);

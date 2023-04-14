@@ -16,6 +16,7 @@
 #include "common/rid.h"
 #include "storage/page/b_plus_tree_internal_page.h"
 #include "storage/page/b_plus_tree_leaf_page.h"
+#include "storage/page/b_plus_tree_page.h"
 
 namespace bustub {
 
@@ -49,7 +50,19 @@ void B_PLUS_TREE_LEAF_PAGE_TYPE::SetNextPageId(page_id_t next_page_id) { next_pa
  */
 INDEX_TEMPLATE_ARGUMENTS
 auto B_PLUS_TREE_LEAF_PAGE_TYPE::KeyIndex(const KeyType &key, const KeyComparator &comparator) const -> int {
-  return std::lower_bound(array_ + 1, array_ + GetSize() + 1, key, comparator) - array_;
+  int l = 1;
+  int r = GetSize();
+  int res = 0;
+  while (l <= r) {
+    int mid = (l + r) >> 1;
+    if (comparator(KeyAt(mid), key) >= 0) {
+      r = mid - 1;
+      res = mid;
+    } else {
+      l = mid + 1;
+    }
+  }
+  return res;
 }
 
 /*
@@ -78,7 +91,7 @@ void B_PLUS_TREE_LEAF_PAGE_TYPE::SetKeyAt(int index, const KeyType &key) {
  */
 INDEX_TEMPLATE_ARGUMENTS
 auto B_PLUS_TREE_LEAF_PAGE_TYPE::ValueAt(int index) const -> ValueType {
-  if (index < 1 || index > GetSize()) {
+  if (index < 0 || index > GetSize()) {
     return ValueType{};
   }
   return (array_ + index)->second;
@@ -86,10 +99,34 @@ auto B_PLUS_TREE_LEAF_PAGE_TYPE::ValueAt(int index) const -> ValueType {
 
 INDEX_TEMPLATE_ARGUMENTS
 void B_PLUS_TREE_LEAF_PAGE_TYPE::SetValueAt(int index, const ValueType &value) {
-  if (index < 1 || index > GetSize()) {
+  if (index < 0 || index > GetSize()) {
     return;
   }
   (array_ + index)->second = value;
+}
+
+INDEX_TEMPLATE_ARGUMENTS
+void B_PLUS_TREE_LEAF_PAGE_TYPE::SetDataAt(int index, const KeyType &key, const ValueType &value) {
+  if (index < 1 || index > GetSize()) {
+    return;
+  }
+  (array_ + index)->first = key;
+  (array_ + index)->second = value;
+}
+
+INDEX_TEMPLATE_ARGUMENTS
+void B_PLUS_TREE_LEAF_PAGE_TYPE::CopyBackward(int index) {
+    IncreaseSize(1);
+    std::copy_backward(array_ + index, array_ + GetSize(), array_ + index + 1);
+}
+
+INDEX_TEMPLATE_ARGUMENTS
+void B_PLUS_TREE_LEAF_PAGE_TYPE::CopySecondHalfTo(BPlusTreeLeafPage *other) {
+  int start = GetSize() / 2 + 1;
+  int end = GetSize() + 1;
+  other->IncreaseSize(end - start);
+  this->IncreaseSize(-(end - start));
+  std::copy(array_ + start, array_ + end, other->array_ + 1);
 }
 
 template class BPlusTreeLeafPage<GenericKey<4>, RID, GenericComparator<4>>;

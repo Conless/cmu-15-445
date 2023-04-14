@@ -10,6 +10,7 @@
 //===----------------------------------------------------------------------===//
 #pragma once
 
+#include <algorithm>
 #include <queue>
 #include <string>
 
@@ -67,6 +68,15 @@ class BPlusTreeInternalPage : public BPlusTreePage {
   void SetKeyAt(int index, const KeyType &key);
 
   /**
+   * @brief Set the Data At object
+   * 
+   * @param index 
+   * @param key 
+   * @param value 
+   */
+  void SetDataAt(int index, const KeyType &key, const ValueType &value);
+
+  /**
    *
    * @param value the value to search for
    */
@@ -85,6 +95,10 @@ class BPlusTreeInternalPage : public BPlusTreePage {
    * @param value The new value
    */
   void SetValueAt(int index, const ValueType &value);
+
+  void CopyBackward(int index);
+
+  void CopySecondHalfTo(BPlusTreeInternalPage *other);
 
 
   /**

@@ -92,6 +92,19 @@ class BPlusTreeLeafPage : public BPlusTreePage {
   void SetValueAt(int index, const ValueType &value);
 
   /**
+   * @brief Set the Data At object
+   * 
+   * @param index 
+   * @param key 
+   * @param value 
+   */
+  void SetDataAt(int index, const KeyType &key, const ValueType &value);
+  
+  void CopyBackward(int index);
+
+  void CopySecondHalfTo(BPlusTreeLeafPage *other);
+
+  /**
    * @brief for test only return a string representing all keys in
    * this leaf page formatted as "(key1,key2,key3,...)"
    *

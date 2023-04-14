@@ -20,8 +20,8 @@
 namespace bustub {
 
 BufferPoolManager::BufferPoolManager(size_t pool_size, DiskManager *disk_manager, size_t replacer_k,
-                                     LogManager *log_manager)
-    : pool_size_(pool_size), disk_manager_(disk_manager), log_manager_(log_manager) {
+                                     LogManager *log_manager, bool is_thread_safe)
+    : pool_size_(pool_size), disk_manager_(disk_manager), log_manager_(log_manager), is_thread_safe_(is_thread_safe) {
   // TODO(students): remove this line after you have implemented the buffer pool manager
   // throw NotImplementedException(
   //     "BufferPoolManager is not implemented yet. If you have finished implementing BPM, please remove the throw "
@@ -57,7 +57,8 @@ auto BufferPoolManager::FindFrame(frame_id_t *frame_id) -> bool {
 }
 
 auto BufferPoolManager::NewPage(page_id_t *page_id) -> Page * {
-  std::lock_guard<std::mutex> lock(latch_);
+  std::unique_lock<std::mutex> lock =
+      is_thread_safe_ ? std::unique_lock<std::mutex>(latch_) : std::unique_lock<std::mutex>();
   frame_id_t frame_id;
   if (!FindFrame(&frame_id)) {
     return nullptr;
@@ -72,7 +73,8 @@ auto BufferPoolManager::NewPage(page_id_t *page_id) -> Page * {
 }
 
 auto BufferPoolManager::FetchPage(page_id_t page_id, [[maybe_unused]] AccessType access_type) -> Page * {
-  std::lock_guard<std::mutex> lock(latch_);
+  std::unique_lock<std::mutex> lock =
+      is_thread_safe_ ? std::unique_lock<std::mutex>(latch_) : std::unique_lock<std::mutex>();
   frame_id_t frame_id;
   Page *page;
   auto it = page_table_.find(page_id);
@@ -95,7 +97,8 @@ auto BufferPoolManager::FetchPage(page_id_t page_id, [[maybe_unused]] AccessType
 }
 
 auto BufferPoolManager::UnpinPage(page_id_t page_id, bool is_dirty, [[maybe_unused]] AccessType access_type) -> bool {
-  std::lock_guard<std::mutex> lock(latch_);
+  std::unique_lock<std::mutex> lock =
+      is_thread_safe_ ? std::unique_lock<std::mutex>(latch_) : std::unique_lock<std::mutex>();
   auto it = page_table_.find(page_id);
   if (it == page_table_.end()) {
     return true;
@@ -114,7 +117,8 @@ auto BufferPoolManager::UnpinPage(page_id_t page_id, bool is_dirty, [[maybe_unus
 }
 
 auto BufferPoolManager::FlushPage(page_id_t page_id) -> bool {
-  std::lock_guard<std::mutex> lock(latch_);
+  std::unique_lock<std::mutex> lock =
+      is_thread_safe_ ? std::unique_lock<std::mutex>(latch_) : std::unique_lock<std::mutex>();
   if (page_id == INVALID_PAGE_ID) {
     return false;
   }
@@ -130,7 +134,8 @@ auto BufferPoolManager::FlushPage(page_id_t page_id) -> bool {
 }
 
 void BufferPoolManager::FlushAllPages() {
-  std::lock_guard<std::mutex> lock(latch_);
+  std::unique_lock<std::mutex> lock =
+      is_thread_safe_ ? std::unique_lock<std::mutex>(latch_) : std::unique_lock<std::mutex>();
   for (auto &it : page_table_) {
     frame_id_t frame_id = it.second;
     Page *page = &pages_[frame_id];
@@ -140,7 +145,8 @@ void BufferPoolManager::FlushAllPages() {
 }
 
 auto BufferPoolManager::DeletePage(page_id_t page_id) -> bool {
-  std::lock_guard<std::mutex> lock(latch_);
+  std::unique_lock<std::mutex> lock =
+      is_thread_safe_ ? std::unique_lock<std::mutex>(latch_) : std::unique_lock<std::mutex>();
   auto it = page_table_.find(page_id);
   if (it == page_table_.end()) {
     return true;

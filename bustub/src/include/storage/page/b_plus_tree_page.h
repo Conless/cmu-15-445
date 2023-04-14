@@ -56,6 +56,8 @@ class BPlusTreePage {
   void SetMaxSize(int max_size);
   auto GetMinSize() const -> int;
 
+  auto SizeExceeded() const -> bool;
+
  private:
   // member variable, attributes that both internal and leaf page share
   IndexPageType page_type_;

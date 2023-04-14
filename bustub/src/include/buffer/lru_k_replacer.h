@@ -62,7 +62,7 @@ class LRUKReplacer {
    * @brief a new LRUKReplacer.
    * @param num_frames the maximum number of frames the LRUReplacer will be required to store
    */
-  explicit LRUKReplacer(size_t num_frames, size_t k);
+  explicit LRUKReplacer(size_t num_frames, size_t k, bool is_thread_safe = true);
 
   DISALLOW_COPY_AND_MOVE(LRUKReplacer);
 
@@ -163,6 +163,7 @@ class LRUKReplacer {
   size_t replacer_size_;
   size_t k_;
   std::mutex latch_;
+  bool is_thread_safe_;
 };
 
 }  // namespace bustub
