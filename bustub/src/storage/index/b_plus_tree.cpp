@@ -58,10 +58,10 @@ auto BPLUSTREE_TYPE::CreateNewPage(IndexPageType page_type) -> page_id_t {
   WritePageGuard page_guard = bpm_->FetchPageWrite(new_page_id);
   if (page_type == IndexPageType::INTERNAL_PAGE) {
     auto page = page_guard.AsMut<InternalPage>();
-    page->Init(leaf_max_size_);
+    page->Init(internal_max_size_);
   } else {
     auto page = page_guard.AsMut<LeafPage>();
-    page->Init(internal_max_size_);
+    page->Init(leaf_max_size_);
   }
   return new_page_id;
 }
@@ -150,8 +150,8 @@ auto BPLUSTREE_TYPE::InsertIntoPage(WritePageGuard &cur_guard, const KeyType &ke
 
 INDEX_TEMPLATE_ARGUMENTS
 auto BPLUSTREE_TYPE::InsertIntoLeafPage(WritePageGuard &cur_guard, const KeyType &key, const ValueType &value, Context *ctx) -> bool {
-  ctx->write_set_.emplace_back(std::move(cur_guard));
   auto leaf_page = cur_guard.AsMut<LeafPage>();
+  ctx->write_set_.emplace_back(std::move(cur_guard));
   int insert_index = leaf_page->KeyIndex(key, comparator_);
   leaf_page->IncreaseSize(1);
   leaf_page->CopyBackward(insert_index + 1);
