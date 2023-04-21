@@ -117,8 +117,10 @@ auto BPLUSTREE_TYPE::Insert(const KeyType &key, const ValueType &value, Transact
     if (cur_page->SizeExceeded()) {
       page_id_t root_id = CreateNewRoot(IndexPageType::INTERNAL_PAGE);
       WritePageGuard root_guard = bpm_->FetchPageWrite(root_id);
-      auto root_page = root_guard.AsMut<BPlusTreePage>();
-      SplitPage(cur_page, reinterpret_cast<InternalPage *>(root_page), 1);
+      auto root_page = root_guard.AsMut<InternalPage>();
+      root_page->IncreaseSize(1);
+      root_page->SetValueAt(0, GetRootPageId());
+      SplitPage(cur_page, root_page);
     }
   }
   return false;
@@ -133,17 +135,19 @@ auto BPLUSTREE_TYPE::InsertIntoPage(WritePageGuard &cur_guard, const KeyType &ke
   }
   ctx->write_set_.emplace_back(std::move(cur_guard));
   auto internal_page = reinterpret_cast<InternalPage *>(cur_page);
-  int insert_index = internal_page->KeyIndex(key, comparator_);
-  page_id_t next_page_id = internal_page->ValueAt(insert_index);
+  int next_insert_index = internal_page->KeyIndex(key, comparator_);
+  page_id_t next_page_id = internal_page->ValueAt(next_insert_index);
   auto next_guard = bpm_->FetchPageWrite(next_page_id);
   if (InsertIntoPage(next_guard, key, value, ctx)) {
+    cur_guard = std::move(ctx->write_set_.back());
     ctx->write_set_.pop_back();
     if (internal_page->SizeExceeded() && !ctx->write_set_.empty()) {
       auto last_page = ctx->write_set_.back().AsMut<InternalPage>();
-      SplitPage(internal_page, last_page, insert_index);
+      SplitPage(internal_page, last_page);
     }
     return true;
   }
+  cur_guard = std::move(ctx->write_set_.back());
   ctx->write_set_.pop_back();
   return false;
 }
@@ -152,45 +156,41 @@ INDEX_TEMPLATE_ARGUMENTS
 auto BPLUSTREE_TYPE::InsertIntoLeafPage(WritePageGuard &cur_guard, const KeyType &key, const ValueType &value, Context *ctx) -> bool {
   auto leaf_page = cur_guard.AsMut<LeafPage>();
   ctx->write_set_.emplace_back(std::move(cur_guard));
-  int insert_index = leaf_page->KeyIndex(key, comparator_);
-  leaf_page->IncreaseSize(1);
-  leaf_page->CopyBackward(insert_index + 1);
-  leaf_page->SetDataAt(insert_index, key, value);
+  leaf_page->InsertData(key, value, comparator_);
+  cur_guard = std::move(ctx->write_set_.back());
   ctx->write_set_.pop_back();
   if (leaf_page->SizeExceeded() && !ctx->write_set_.empty()) {
     auto last_page = ctx->write_set_.back().AsMut<InternalPage>();
-    SplitPage(leaf_page, last_page, insert_index);
+    SplitPage(leaf_page, last_page);
   }
   return true;
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREE_TYPE::SplitPage(BPlusTreePage *cur_page, InternalPage *last_page, int index) -> bool {
+auto BPLUSTREE_TYPE::SplitPage(BPlusTreePage *cur_page, InternalPage *last_page) -> bool {
   BUSTUB_ASSERT(!last_page->IsLeafPage(), "The parent page should be an internal page.");
   if (cur_page->IsLeafPage()) {
-    return SplitLeafPage(reinterpret_cast<LeafPage *>(cur_page), last_page, index);
+    return SplitLeafPage(reinterpret_cast<LeafPage *>(cur_page), last_page);
   }
-  return SplitInternalPage(reinterpret_cast<InternalPage *>(cur_page), last_page, index);
+  return SplitInternalPage(reinterpret_cast<InternalPage *>(cur_page), last_page);
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREE_TYPE::SplitLeafPage(LeafPage *cur_page, InternalPage *last_page, int index) -> bool {
-  last_page->CopyBackward(index + 1);
+auto BPLUSTREE_TYPE::SplitLeafPage(LeafPage *cur_page, InternalPage *last_page) -> bool {
   page_id_t new_leaf_id = CreateNewPage(IndexPageType::LEAF_PAGE);
   WritePageGuard new_leaf_guard = bpm_->FetchPageWrite(new_leaf_id);
   auto new_leaf_page = new_leaf_guard.AsMut<LeafPage>();
   cur_page->CopySecondHalfTo(new_leaf_page);
-  last_page->SetDataAt(index + 1, new_leaf_page->KeyAt(1), new_leaf_id);
+  last_page->InsertData(new_leaf_page->KeyAt(0), new_leaf_id, comparator_);
   return true;
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREE_TYPE::SplitInternalPage(InternalPage *cur_page, InternalPage *last_page, int index) -> bool {
-  last_page->CopyBackward(index + 1);
+auto BPLUSTREE_TYPE::SplitInternalPage(InternalPage *cur_page, InternalPage *last_page) -> bool {
   page_id_t new_internal_id = CreateNewPage(IndexPageType::INTERNAL_PAGE);
   WritePageGuard new_internal_guard = bpm_->FetchPageWrite(new_internal_id);
   auto new_internal_page = new_internal_guard.AsMut<InternalPage>();
-  last_page->SetDataAt(index + 1, cur_page->KeyAt(cur_page->GetSize() / 2), new_internal_id);
+  last_page->InsertData(cur_page->KeyAt(cur_page->GetSize() / 2), new_internal_id, comparator_);
   cur_page->CopySecondHalfTo(new_internal_page);
   return true;
 }

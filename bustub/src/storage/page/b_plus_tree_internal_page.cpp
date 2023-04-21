@@ -35,12 +35,13 @@ void B_PLUS_TREE_INTERNAL_PAGE_TYPE::Init(int max_size) {
 
 /*
  * Helper method to get the index associated with key
+ * The result is the first key that is greater or equal then the given key, from 1 to size()
  */
 INDEX_TEMPLATE_ARGUMENTS
 auto B_PLUS_TREE_INTERNAL_PAGE_TYPE::KeyIndex(const KeyType &key, const KeyComparator &comparator) const -> int {
   int l = 1;
-  int r = GetSize();
-  int res = 1;
+  int r = GetSize() - 1;
+  int res = GetSize();
   while (l <= r) {
     int mid = (l + r) >> 1;
     if (comparator(KeyAt(mid), key) >= 0) {
@@ -59,7 +60,7 @@ auto B_PLUS_TREE_INTERNAL_PAGE_TYPE::KeyIndex(const KeyType &key, const KeyCompa
  */
 INDEX_TEMPLATE_ARGUMENTS
 auto B_PLUS_TREE_INTERNAL_PAGE_TYPE::KeyAt(int index) const -> KeyType {
-  if (index < 1 || index > GetSize()) {
+  if (index < 1 || index >= GetSize()) {
     return KeyType{};
   }
   return (array_ + index)->first;
@@ -67,7 +68,7 @@ auto B_PLUS_TREE_INTERNAL_PAGE_TYPE::KeyAt(int index) const -> KeyType {
 
 INDEX_TEMPLATE_ARGUMENTS
 void B_PLUS_TREE_INTERNAL_PAGE_TYPE::SetKeyAt(int index, const KeyType &key) {
-  if (index < 1 || index > GetSize()) {
+  if (index < 1 || index >= GetSize()) {
     return;
   }
   (array_ + index)->first = key;
@@ -79,7 +80,7 @@ void B_PLUS_TREE_INTERNAL_PAGE_TYPE::SetKeyAt(int index, const KeyType &key) {
  */
 INDEX_TEMPLATE_ARGUMENTS
 auto B_PLUS_TREE_INTERNAL_PAGE_TYPE::ValueAt(int index) const -> ValueType {
-  if (index < 0 || index > GetSize()) {
+  if (index < 0 || index >= GetSize()) {
     return ValueType{};
   }
   return (array_ + index)->second;
@@ -87,7 +88,7 @@ auto B_PLUS_TREE_INTERNAL_PAGE_TYPE::ValueAt(int index) const -> ValueType {
 
 INDEX_TEMPLATE_ARGUMENTS
 void B_PLUS_TREE_INTERNAL_PAGE_TYPE::SetValueAt(int index, const ValueType &value) {
-  if (index < 0 || index > GetSize()) {
+  if (index < 0 || index >= GetSize()) {
     return;
   }
   (array_ + index)->second = value;
@@ -95,7 +96,7 @@ void B_PLUS_TREE_INTERNAL_PAGE_TYPE::SetValueAt(int index, const ValueType &valu
 
 INDEX_TEMPLATE_ARGUMENTS
 void B_PLUS_TREE_INTERNAL_PAGE_TYPE::SetDataAt(int index, const KeyType &key, const ValueType &value) {
-  if (index < 1 || index > GetSize()) {
+  if (index < 1 || index >= GetSize()) {
     return;
   }
   (array_ + index)->first = key;
@@ -116,6 +117,15 @@ void B_PLUS_TREE_INTERNAL_PAGE_TYPE::CopySecondHalfTo(BPlusTreeInternalPage *oth
   this->IncreaseSize(-(end - start + 1));
   other->array_[0].second = array_[start - 1].second;
   std::copy(array_ + start, array_ + end, other->array_ + 1);
+}
+
+INDEX_TEMPLATE_ARGUMENTS
+void B_PLUS_TREE_INTERNAL_PAGE_TYPE::InsertData(const KeyType &key, const ValueType &value, const KeyComparator &comparator) {
+  int index = KeyIndex(key, comparator); // recall index corresponds to the first greater or equal key
+  CopyBackward(index);
+  IncreaseSize(1);
+  SetKeyAt(index, key);
+  SetValueAt(index, value);
 }
 
 // valuetype for internalNode should be page id_t
