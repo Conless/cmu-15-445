@@ -50,7 +50,7 @@ void B_PLUS_TREE_LEAF_PAGE_TYPE::SetNextPageId(page_id_t next_page_id) { next_pa
  * The result is the last key that is less or equal than the given key, from -1 to size() - 1
  */
 INDEX_TEMPLATE_ARGUMENTS
-auto B_PLUS_TREE_LEAF_PAGE_TYPE::KeyIndex(const KeyType &key, const KeyComparator &comparator) const -> int {
+auto B_PLUS_TREE_LEAF_PAGE_TYPE::GetLastIndexLE(const KeyType &key, const KeyComparator &comparator) const -> int {
   int l = 0;
   int r = GetSize() - 1;
   int res = -1;
@@ -117,21 +117,24 @@ void B_PLUS_TREE_LEAF_PAGE_TYPE::SetDataAt(int index, const KeyType &key, const 
 
 INDEX_TEMPLATE_ARGUMENTS
 void B_PLUS_TREE_LEAF_PAGE_TYPE::CopyBackward(int index) {
-    std::copy_backward(array_ + index, array_ + GetSize(), array_ + index + 1);
+  for (int i = GetSize(); i > index; i--) {
+    *(array_ + i) = *(array_ + i - 1);
+  }
 }
 
 INDEX_TEMPLATE_ARGUMENTS
 void B_PLUS_TREE_LEAF_PAGE_TYPE::CopySecondHalfTo(BPlusTreeLeafPage *other) {
-  int start = GetSize() / 2;
-  int end = GetSize();
-  other->IncreaseSize(end - start);
-  this->IncreaseSize(-(end - start));
+  int size = GetSize();
+  int start = size / 2;
+  int end = size;
+  this->SetSize(size / 2);
+  other->SetSize(size - size / 2);
   std::copy(array_ + start, array_ + end, other->array_);
 }
 
 INDEX_TEMPLATE_ARGUMENTS
 void B_PLUS_TREE_LEAF_PAGE_TYPE::InsertData(const KeyType &key, const ValueType &value, const KeyComparator &comparator) {
-  int index = KeyIndex(key, comparator); // recall index corresponds to the last less or equal key
+  int index = GetLastIndexLE(key, comparator); // recall index corresponds to the last less or equal key
   CopyBackward(index + 1);
   IncreaseSize(1);
   SetKeyAt(index + 1, key);

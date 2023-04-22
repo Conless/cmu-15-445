@@ -86,6 +86,8 @@ class BPlusTree<KeyType, ValueType, KeyComparator, true> {
   // Return the value associated with a given key
   auto GetValue(const KeyType &key, std::vector<ValueType> *result, Transaction *txn = nullptr) -> bool;
 
+  auto GetValue(const KeyType &key, std::vector<ValueType> *result, const KeyComparator &comparator, Transaction *txn = nullptr) -> bool;
+
   // Return the page id of the root node
   auto GetRootPageId() -> page_id_t;
 
@@ -138,7 +140,6 @@ class BPlusTree<KeyType, ValueType, KeyComparator, true> {
    * @return WritePageGuard
    */
   auto GetRootGuard(bool create_new_root = false) -> WritePageGuard;
-  //   void SetRoot(page_id_t new_root_id);
 
   /**
    * @brief Insert the <key, value> pair into current page
@@ -150,11 +151,14 @@ class BPlusTree<KeyType, ValueType, KeyComparator, true> {
    * @return true 
    * @return false 
    */
-  auto InsertIntoPage(WritePageGuard &cur_guard, const KeyType &key, const ValueType &value, Context *ctx) -> bool;
-  auto InsertIntoLeafPage(WritePageGuard &cur_guard, const KeyType &key, const ValueType &value, Context *ctx) -> bool;
-  auto SplitPage(BPlusTreePage *cur_page, InternalPage *last_page, int index) -> bool;
-  auto SplitLeafPage(LeafPage *cur_page, InternalPage *last_page, int index) -> bool;
-  auto SplitInternalPage(InternalPage *cur_page, InternalPage *last_page, int index) -> bool;
+  auto InsertIntoPage(const KeyType &key, const ValueType &value, Context *ctx) -> bool;
+  auto InsertIntoLeafPage(const KeyType &key, const ValueType &value, Context *ctx) -> bool;
+  auto SplitPage(BPlusTreePage *cur_page, InternalPage *last_page) -> bool;
+  auto SplitLeafPage(LeafPage *cur_page, InternalPage *last_page) -> bool;
+  auto SplitInternalPage(InternalPage *cur_page, InternalPage *last_page) -> bool;
+
+  auto GetValueInPage(const KeyType &key, Context *ctx) -> bool;
+  auto GetValueInLeafPage(const KeyType &key);
 
  private:
   /* Debug Routines for FREE!! */

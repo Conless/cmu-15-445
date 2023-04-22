@@ -15,7 +15,6 @@
 
 #include "common/exception.h"
 #include "storage/page/b_plus_tree_internal_page.h"
-#include "storage/page/b_plus_tree_leaf_page.h"
 #include "storage/page/b_plus_tree_page.h"
 
 namespace bustub {
@@ -34,11 +33,31 @@ void B_PLUS_TREE_INTERNAL_PAGE_TYPE::Init(int max_size) {
 }
 
 /*
- * Helper method to get the index associated with key
- * The result is the first key that is greater or equal then the given key, from 1 to size()
+ * Helper method to get the last key that is less than the given key
  */
 INDEX_TEMPLATE_ARGUMENTS
-auto B_PLUS_TREE_INTERNAL_PAGE_TYPE::KeyIndex(const KeyType &key, const KeyComparator &comparator) const -> int {
+auto B_PLUS_TREE_INTERNAL_PAGE_TYPE::GetLastIndexL(const KeyType &key, const KeyComparator &comparator) const -> int {
+  int l = 1;
+  int r = GetSize() - 1;
+  int res = 0;
+  while (l <= r) {
+    int mid = (l + r) >> 1;
+    if (comparator(KeyAt(mid), key) < 0) {
+      l = mid + 1;
+      res = mid;
+    } else {
+      r = mid - 1;
+    }
+  }
+  return res;
+}
+
+/*
+ * Helper method to get the index associated with key
+ * The result is the first key that is greater or equal than the given key, from 1 to size()
+ */
+INDEX_TEMPLATE_ARGUMENTS
+auto B_PLUS_TREE_INTERNAL_PAGE_TYPE::GetFirstIndexGE(const KeyType &key, const KeyComparator &comparator) const -> int {
   int l = 1;
   int r = GetSize() - 1;
   int res = GetSize();
@@ -105,23 +124,34 @@ void B_PLUS_TREE_INTERNAL_PAGE_TYPE::SetDataAt(int index, const KeyType &key, co
 
 INDEX_TEMPLATE_ARGUMENTS
 void B_PLUS_TREE_INTERNAL_PAGE_TYPE::CopyBackward(int index) {
-    IncreaseSize(1);
-    std::copy_backward(array_ + index, array_ + GetSize(), array_ + index + 1);
+  for (int i = GetSize(); i > index; i--) {
+    *(array_ + i) = *(array_ + i - 1);
+  }
 }
 
+/**
+ * @brief
+ *  For example, we have the old internal page like
+ *      array_[0] array_[1] ... array_[size() - 1]
+ *  So the first size() / 2 elements is from array_[0] to array_[size() / 2 - 1]
+ * @param other 
+ * @return INDEX_TEMPLATE_ARGUMENTS 
+ */
 INDEX_TEMPLATE_ARGUMENTS
 void B_PLUS_TREE_INTERNAL_PAGE_TYPE::CopySecondHalfTo(BPlusTreeInternalPage *other) {
-  int start = GetSize() / 2 + 1;
-  int end = GetSize() + 1;
+  int size = GetSize();
+  int start = size / 2 + 1;
+  int end = size;
   other->IncreaseSize(end - start);
-  this->IncreaseSize(-(end - start + 1));
+  this->SetSize(size / 2);
+  other->SetSize(size - size / 2);
   other->array_[0].second = array_[start - 1].second;
   std::copy(array_ + start, array_ + end, other->array_ + 1);
 }
 
 INDEX_TEMPLATE_ARGUMENTS
 void B_PLUS_TREE_INTERNAL_PAGE_TYPE::InsertData(const KeyType &key, const ValueType &value, const KeyComparator &comparator) {
-  int index = KeyIndex(key, comparator); // recall index corresponds to the first greater or equal key
+  int index = GetFirstIndexGE(key, comparator); // recall index corresponds to the first greater or equal key
   CopyBackward(index);
   IncreaseSize(1);
   SetKeyAt(index, key);

@@ -49,10 +49,22 @@ class BPlusTreeInternalPage : public BPlusTreePage {
   void Init(int max_size = INTERNAL_PAGE_SIZE);
 
   /**
-   *
-   * @param key the key to search for
+   * @brief Get the Last Index Less object
+   * 
+   * @param key 
+   * @param comparator 
+   * @return int 
    */
-  auto KeyIndex(const KeyType &key, const KeyComparator &comparator) const -> int;
+  auto GetLastIndexL(const KeyType &key, const KeyComparator &comparator) const -> int;
+  
+  /**
+   * @brief Get the First Index Greater or Equal object
+   * 
+   * @param key 
+   * @param comparator 
+   * @return int 
+   */
+  auto GetFirstIndexGE(const KeyType &key, const KeyComparator &comparator) const -> int;
 
   /**
    * @param index The index of the key to get. Index must be non-zero.
@@ -100,6 +112,7 @@ class BPlusTreeInternalPage : public BPlusTreePage {
 
   void CopySecondHalfTo(BPlusTreeInternalPage *other);
 
+  void InsertData(const KeyType &key, const ValueType &value, const KeyComparator &comparator);
 
   /**
    * @brief For test only, return a string representing all keys in

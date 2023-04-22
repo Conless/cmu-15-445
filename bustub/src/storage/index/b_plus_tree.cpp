@@ -93,9 +93,13 @@ INDEX_TEMPLATE_ARGUMENTS
 auto BPLUSTREE_TYPE::GetValue(const KeyType &key, std::vector<ValueType> *result, Transaction *txn) -> bool {
   // Declaration of context instance.
   Context ctx;
-  (void)ctx;
+  WritePageGuard cur_guard = GetRootGuard(false);
+
   return false;
 }
+
+// INDEX_TEMPLATE_ARGUMENTS
+// auto BPLUSTREE_TYPE::GetValueInPage(const KeyType &key)
 
 /*****************************************************************************
  * INSERTION
@@ -111,35 +115,39 @@ INDEX_TEMPLATE_ARGUMENTS
 auto BPLUSTREE_TYPE::Insert(const KeyType &key, const ValueType &value, Transaction *txn) -> bool {
   // Declaration of context instance
   Context ctx;
-  WritePageGuard cur_guard = GetRootGuard(true);
-  if (InsertIntoPage(cur_guard, key, value, &ctx)) {
+  WritePageGuard root_guard = GetRootGuard(true);
+  ctx.write_set_.emplace_back(std::move(root_guard));
+  if (InsertIntoPage(key, value, &ctx)) {
+    WritePageGuard cur_guard = GetRootGuard(false);
     auto cur_page = cur_guard.AsMut<BPlusTreePage>();
     if (cur_page->SizeExceeded()) {
+      page_id_t old_root_id = GetRootPageId();
       page_id_t root_id = CreateNewRoot(IndexPageType::INTERNAL_PAGE);
       WritePageGuard root_guard = bpm_->FetchPageWrite(root_id);
       auto root_page = root_guard.AsMut<InternalPage>();
       root_page->IncreaseSize(1);
-      root_page->SetValueAt(0, GetRootPageId());
+      root_page->SetValueAt(0, old_root_id);
       SplitPage(cur_page, root_page);
     }
+    return true;
   }
   return false;
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREE_TYPE::InsertIntoPage(WritePageGuard &cur_guard, const KeyType &key, const ValueType &value, Context *ctx)
+auto BPLUSTREE_TYPE::InsertIntoPage(const KeyType &key, const ValueType &value, Context *ctx)
     -> bool {
-  auto cur_page = cur_guard.AsMut<BPlusTreePage>();
+  auto cur_page = ctx->write_set_.back().AsMut<BPlusTreePage>();
   if (cur_page->IsLeafPage()) {
-    return InsertIntoLeafPage(cur_guard, key, value, ctx);
+    return InsertIntoLeafPage(key, value, ctx);
   }
-  ctx->write_set_.emplace_back(std::move(cur_guard));
   auto internal_page = reinterpret_cast<InternalPage *>(cur_page);
-  int next_insert_index = internal_page->KeyIndex(key, comparator_);
+  int next_insert_index = internal_page->GetFirstIndexGE(key, comparator_) - 1;
   page_id_t next_page_id = internal_page->ValueAt(next_insert_index);
   auto next_guard = bpm_->FetchPageWrite(next_page_id);
-  if (InsertIntoPage(next_guard, key, value, ctx)) {
-    cur_guard = std::move(ctx->write_set_.back());
+  ctx->write_set_.emplace_back(std::move(next_guard));
+  if (InsertIntoPage(key, value, ctx)) {
+    WritePageGuard cur_guard = std::move(ctx->write_set_.back());
     ctx->write_set_.pop_back();
     if (internal_page->SizeExceeded() && !ctx->write_set_.empty()) {
       auto last_page = ctx->write_set_.back().AsMut<InternalPage>();
@@ -147,17 +155,15 @@ auto BPLUSTREE_TYPE::InsertIntoPage(WritePageGuard &cur_guard, const KeyType &ke
     }
     return true;
   }
-  cur_guard = std::move(ctx->write_set_.back());
   ctx->write_set_.pop_back();
   return false;
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREE_TYPE::InsertIntoLeafPage(WritePageGuard &cur_guard, const KeyType &key, const ValueType &value, Context *ctx) -> bool {
-  auto leaf_page = cur_guard.AsMut<LeafPage>();
-  ctx->write_set_.emplace_back(std::move(cur_guard));
+auto BPLUSTREE_TYPE::InsertIntoLeafPage(const KeyType &key, const ValueType &value, Context *ctx) -> bool {
+  auto leaf_page = ctx->write_set_.back().AsMut<LeafPage>();
   leaf_page->InsertData(key, value, comparator_);
-  cur_guard = std::move(ctx->write_set_.back());
+  WritePageGuard cur_guard = std::move(ctx->write_set_.back());
   ctx->write_set_.pop_back();
   if (leaf_page->SizeExceeded() && !ctx->write_set_.empty()) {
     auto last_page = ctx->write_set_.back().AsMut<InternalPage>();
@@ -182,6 +188,8 @@ auto BPLUSTREE_TYPE::SplitLeafPage(LeafPage *cur_page, InternalPage *last_page) 
   auto new_leaf_page = new_leaf_guard.AsMut<LeafPage>();
   cur_page->CopySecondHalfTo(new_leaf_page);
   last_page->InsertData(new_leaf_page->KeyAt(0), new_leaf_id, comparator_);
+  new_leaf_page->SetNextPageId(cur_page->GetNextPageId());
+  cur_page->SetNextPageId(new_leaf_id);
   return true;
 }
 

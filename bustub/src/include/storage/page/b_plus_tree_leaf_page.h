@@ -62,7 +62,7 @@ class BPlusTreeLeafPage : public BPlusTreePage {
    *
    * @param key the key to search for
    */
-  auto KeyIndex(const KeyType &key, const KeyComparator &comparator) const -> int;
+  auto GetLastIndexLE(const KeyType &key, const KeyComparator &comparator) const -> int;
 
   /**
    * @param index The index of the key to get. Index must be non-zero.
@@ -99,6 +99,8 @@ class BPlusTreeLeafPage : public BPlusTreePage {
    * @param value 
    */
   void SetDataAt(int index, const KeyType &key, const ValueType &value);
+
+  void InsertData(const KeyType &key, const ValueType &value, const KeyComparator &comparator);
   
   void CopyBackward(int index);
 
