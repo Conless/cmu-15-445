@@ -17,6 +17,7 @@
 #include <queue>
 #include <shared_mutex>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "common/config.h"
@@ -81,12 +82,13 @@ class BPlusTree<KeyType, ValueType, KeyComparator, true> {
   auto Insert(const KeyType &key, const ValueType &value, Transaction *txn = nullptr) -> bool;
 
   // Remove a key and its value from this B+ tree.
-  void Remove(const KeyType &key, Transaction *txn);
+  auto Remove(const KeyType &key, Transaction *txn) -> bool;
 
   // Return the value associated with a given key
   auto GetValue(const KeyType &key, std::vector<ValueType> *result, Transaction *txn = nullptr) -> bool;
 
-  auto GetValue(const KeyType &key, std::vector<ValueType> *result, const KeyComparator &comparator, Transaction *txn = nullptr) -> bool;
+  auto GetValue(const KeyType &key, std::vector<ValueType> *result, const KeyComparator &comparator,
+                Transaction *txn = nullptr) -> bool;
 
   // Return the page id of the root node
   auto GetRootPageId() -> page_id_t;
@@ -124,6 +126,8 @@ class BPlusTree<KeyType, ValueType, KeyComparator, true> {
   void RemoveFromFile(const std::string &file_name, Transaction *txn = nullptr);
 
  protected:
+  void SetNewRoot(page_id_t new_root_id);
+  void SetNewRoot(page_id_t new_root_id, BPlusTreeHeaderPage *header_page);
   auto CreateNewRoot(IndexPageType page_type) -> page_id_t;
   auto CreateNewRoot(IndexPageType page_type, BPlusTreeHeaderPage *header_page) -> page_id_t;
   /**
@@ -139,26 +143,35 @@ class BPlusTree<KeyType, ValueType, KeyComparator, true> {
    * @param create_new_root whether to create a new root when there's no root
    * @return WritePageGuard
    */
-  auto GetRootGuard(bool create_new_root = false) -> WritePageGuard;
+  auto GetRootGuardWrite(bool create_new_root = false) -> WritePageGuard;
+  auto GetRootGuardRead() -> ReadPageGuard;
 
   /**
    * @brief Insert the <key, value> pair into current page
-   * 
-   * @param cur_guard 
-   * @param key 
-   * @param value 
-   * @param ctx 
-   * @return true 
-   * @return false 
+   *
+   * @param cur_guard
+   * @param key
+   * @param value
+   * @param ctx
+   * @return true
+   * @return false
    */
   auto InsertIntoPage(const KeyType &key, const ValueType &value, Context *ctx) -> bool;
   auto InsertIntoLeafPage(const KeyType &key, const ValueType &value, Context *ctx) -> bool;
-  auto SplitPage(BPlusTreePage *cur_page, InternalPage *last_page) -> bool;
   auto SplitLeafPage(LeafPage *cur_page, InternalPage *last_page) -> bool;
   auto SplitInternalPage(InternalPage *cur_page, InternalPage *last_page) -> bool;
 
-  auto GetValueInPage(const KeyType &key, Context *ctx) -> bool;
-  auto GetValueInLeafPage(const KeyType &key);
+  auto GetValueInPage(const KeyType &key, std::vector<ValueType> *result, Context *ctx, const KeyComparator &comparator)
+      -> bool;
+  auto GetValueInLeafPage(const KeyType &key, std::vector<ValueType> *result, Context *ctx,
+                          const KeyComparator &comparator) -> bool;
+
+  auto RemoveInPage(const KeyType &key, Context *ctx) -> std::pair<bool, KeyType>;
+  auto RemoveInLeafPage(const KeyType &key, Context *ctx) -> std::pair<bool, KeyType>;
+  auto ReplenishLeafPage(LeafPage *cur_page, InternalPage *last_page) -> bool;
+  auto ReplenishInternalPage(InternalPage *cur_page, InternalPage *last_page) -> bool;
+  auto CoalesceLeafPage(LeafPage *cur_page, InternalPage *last_page) -> bool;
+  auto CoalesceInternalPage(InternalPage *cur_page, InternalPage *last_page) -> bool;
 
  private:
   /* Debug Routines for FREE!! */
