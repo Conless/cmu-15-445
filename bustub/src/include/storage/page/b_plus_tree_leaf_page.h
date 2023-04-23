@@ -64,6 +64,10 @@ class BPlusTreeLeafPage : public BPlusTreePage {
    */
   auto GetLastIndexLE(const KeyType &key, const KeyComparator &comparator) const -> int;
 
+  auto GetLastIndexL(const KeyType &key, const KeyComparator &comparator) const -> int;
+
+  auto GetIndexE(const KeyType &key, const KeyComparator &comparator) const -> int;
+
   /**
    * @param index The index of the key to get. Index must be non-zero.
    * @return Key at index
@@ -93,18 +97,28 @@ class BPlusTreeLeafPage : public BPlusTreePage {
 
   /**
    * @brief Set the Data At object
-   * 
-   * @param index 
-   * @param key 
-   * @param value 
+   *
+   * @param index
+   * @param key
+   * @param value
    */
   void SetDataAt(int index, const KeyType &key, const ValueType &value);
 
-  void InsertData(const KeyType &key, const ValueType &value, const KeyComparator &comparator);
-  
+  auto InsertData(const KeyType &key, const ValueType &value, const KeyComparator &comparator) -> int;
+
+  auto RemoveData(const KeyType &key, const KeyComparator &comparator) -> int;
+
+  auto RemoveData(int index) -> MappingType;
+
   void CopyBackward(int index);
 
+  void CopyForward(int index);
+
   void CopySecondHalfTo(BPlusTreeLeafPage *other);
+
+  void CopyFirstNTo(int n, BPlusTreeLeafPage *other);
+
+  void CopyBackNTo(int n, BPlusTreeLeafPage *other);
 
   /**
    * @brief for test only return a string representing all keys in

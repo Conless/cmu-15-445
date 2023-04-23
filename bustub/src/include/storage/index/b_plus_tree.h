@@ -168,10 +168,10 @@ class BPlusTree<KeyType, ValueType, KeyComparator, true> {
 
   auto RemoveInPage(const KeyType &key, Context *ctx) -> std::pair<bool, KeyType>;
   auto RemoveInLeafPage(const KeyType &key, Context *ctx) -> std::pair<bool, KeyType>;
-  auto ReplenishLeafPage(LeafPage *cur_page, InternalPage *last_page) -> bool;
-  auto ReplenishInternalPage(InternalPage *cur_page, InternalPage *last_page) -> bool;
-  auto CoalesceLeafPage(LeafPage *cur_page, InternalPage *last_page) -> bool;
-  auto CoalesceInternalPage(InternalPage *cur_page, InternalPage *last_page) -> bool;
+  auto ReplenishLeafPage(LeafPage *cur_page, InternalPage *last_page, int index) -> bool;
+  auto ReplenishInternalPage(InternalPage *cur_page, InternalPage *last_page, int index) -> bool;
+  auto CoalesceLeafPage(LeafPage *cur_page, InternalPage *last_page, int index) -> bool;
+  auto CoalesceInternalPage(InternalPage *cur_page, InternalPage *last_page, int index) -> bool;
 
  private:
   /* Debug Routines for FREE!! */

@@ -42,4 +42,5 @@ auto BPlusTreePage::GetMinSize() const -> int { return max_size_ / 2; }
 
 auto BPlusTreePage::SizeExceeded() const -> bool { return GetSize() > GetMaxSize(); }
 
+auto BPlusTreePage::SizeNotEnough() const -> bool { return GetSize() < GetMinSize(); }
 }  // namespace bustub

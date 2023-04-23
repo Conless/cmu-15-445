@@ -53,6 +53,26 @@ auto B_PLUS_TREE_INTERNAL_PAGE_TYPE::GetLastIndexL(const KeyType &key, const Key
 }
 
 /*
+ * Helper method to get the last key that is less than the given key
+ */
+INDEX_TEMPLATE_ARGUMENTS
+auto B_PLUS_TREE_INTERNAL_PAGE_TYPE::GetLastIndexLE(const KeyType &key, const KeyComparator &comparator) const -> int {
+  int l = 1;
+  int r = GetSize() - 1;
+  int res = 0;
+  while (l <= r) {
+    int mid = (l + r) >> 1;
+    if (comparator(KeyAt(mid), key) <= 0) {
+      l = mid + 1;
+      res = mid;
+    } else {
+      r = mid - 1;
+    }
+  }
+  return res;
+}
+
+/*
  * Helper method to get the index associated with key
  * The result is the first key that is greater or equal than the given key, from 1 to size()
  */
@@ -73,13 +93,32 @@ auto B_PLUS_TREE_INTERNAL_PAGE_TYPE::GetFirstIndexGE(const KeyType &key, const K
   return res;
 }
 
+INDEX_TEMPLATE_ARGUMENTS
+auto B_PLUS_TREE_INTERNAL_PAGE_TYPE::GetIndexE(const KeyType &key, const KeyComparator &comparator) const -> int {
+  int l = 1;
+  int r = GetSize() - 1;
+  while (l <= r) {
+    int mid = (l + r) >> 1;
+    int comp_res = comparator(KeyAt(mid), key);
+    if (comp_res == 0) {
+      return mid;
+    }
+    if (comp_res < 0) {
+      l = mid + 1;
+    } else {
+      r = mid - 1;
+    }
+  }
+  return -1;
+}
+
 /*
  * Helper method to get/set the key associated with input "index"(a.k.a
  * array offset)
  */
 INDEX_TEMPLATE_ARGUMENTS
 auto B_PLUS_TREE_INTERNAL_PAGE_TYPE::KeyAt(int index) const -> KeyType {
-  if (index < 1 || index >= GetSize()) {
+  if (index < 0 || index >= GetSize()) {
     return KeyType{};
   }
   return (array_ + index)->first;
@@ -87,7 +126,7 @@ auto B_PLUS_TREE_INTERNAL_PAGE_TYPE::KeyAt(int index) const -> KeyType {
 
 INDEX_TEMPLATE_ARGUMENTS
 void B_PLUS_TREE_INTERNAL_PAGE_TYPE::SetKeyAt(int index, const KeyType &key) {
-  if (index < 1 || index >= GetSize()) {
+  if (index < 0 || index >= GetSize()) {
     return;
   }
   (array_ + index)->first = key;
@@ -129,13 +168,20 @@ void B_PLUS_TREE_INTERNAL_PAGE_TYPE::CopyBackward(int index) {
   }
 }
 
+INDEX_TEMPLATE_ARGUMENTS
+void B_PLUS_TREE_INTERNAL_PAGE_TYPE::CopyForward(int index) {
+  for (int i = index + 1; i < GetSize(); i++) {
+    *(array_ + i - 1) = *(array_ + i);
+  }
+}
+
 /**
  * @brief
  *  For example, we have the old internal page like
  *      array_[0] array_[1] ... array_[size() - 1]
  *  So the first size() / 2 elements is from array_[0] to array_[size() / 2 - 1]
- * @param other 
- * @return INDEX_TEMPLATE_ARGUMENTS 
+ * @param other
+ * @return INDEX_TEMPLATE_ARGUMENTS
  */
 INDEX_TEMPLATE_ARGUMENTS
 void B_PLUS_TREE_INTERNAL_PAGE_TYPE::CopySecondHalfTo(BPlusTreeInternalPage *other) {
@@ -150,12 +196,59 @@ void B_PLUS_TREE_INTERNAL_PAGE_TYPE::CopySecondHalfTo(BPlusTreeInternalPage *oth
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-void B_PLUS_TREE_INTERNAL_PAGE_TYPE::InsertData(const KeyType &key, const ValueType &value, const KeyComparator &comparator) {
-  int index = GetFirstIndexGE(key, comparator); // recall index corresponds to the first greater or equal key
+void B_PLUS_TREE_INTERNAL_PAGE_TYPE::CopyFirstNTo(int n, BPlusTreeInternalPage *other) {
+  BUSTUB_ASSERT(n <= GetSize(), "Error");
+  for (int i = other->GetSize(), j = 0; j < n; i++, j++) {
+    *(other->array_ + i) = *(array_ + j);
+  }
+  other->IncreaseSize(n);
+  this->IncreaseSize(-n);
+  int cur_size = GetSize();
+  for (int i = 0; i < cur_size; i++) {
+    *(array_ + i) = *(array_ + i + n);
+  }
+}
+
+INDEX_TEMPLATE_ARGUMENTS
+void B_PLUS_TREE_INTERNAL_PAGE_TYPE::CopyBackNTo(int n, BPlusTreeInternalPage *other) {
+  BUSTUB_ASSERT(n <= GetSize(), "Error");
+  other->IncreaseSize(n);
+  for (int i = other->GetSize() - 1; i >= n; i--) {
+    *(other->array_ + i) = *(other->array_ + i - n);
+  }
+  this->IncreaseSize(-n);
+  for (int i = 0, j = GetSize(); i < n; i++, j++) {
+    *(other->array_ + i) = *(array_ + j);
+  }
+}
+
+INDEX_TEMPLATE_ARGUMENTS
+void B_PLUS_TREE_INTERNAL_PAGE_TYPE::InsertData(const KeyType &key, const ValueType &value,
+                                                const KeyComparator &comparator) {
+  int index = GetFirstIndexGE(key, comparator);  // recall index corresponds to the first greater or equal key
   CopyBackward(index);
   IncreaseSize(1);
   SetKeyAt(index, key);
   SetValueAt(index, value);
+}
+
+INDEX_TEMPLATE_ARGUMENTS
+auto B_PLUS_TREE_INTERNAL_PAGE_TYPE::RemoveData(const KeyType &key, const KeyComparator &comparator) -> int {
+  int index = GetIndexE(key, comparator);
+  if (index == -1) {
+    return -1;
+  }
+  CopyForward(index);
+  IncreaseSize(-1);
+  return index;
+}
+
+INDEX_TEMPLATE_ARGUMENTS
+auto B_PLUS_TREE_INTERNAL_PAGE_TYPE::RemoveData(int index) -> MappingType {
+  MappingType data = *(array_ + index);
+  CopyForward(index);
+  IncreaseSize(-1);
+  return data;
 }
 
 // valuetype for internalNode should be page id_t

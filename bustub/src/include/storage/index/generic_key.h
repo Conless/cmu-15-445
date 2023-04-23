@@ -59,7 +59,7 @@ class GenericKey {
   // interpret the first 8 bytes as int64_t from data vector
   inline auto ToString() const -> int64_t {
     // return std::stoi(data_);
-      return *reinterpret_cast<int64_t *>(const_cast<char *>(data_));
+    return *reinterpret_cast<int64_t *>(const_cast<char *>(data_));
   }
 
   template <typename Type>

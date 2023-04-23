@@ -13,6 +13,7 @@
 
 #include "common/config.h"
 #include "common/exception.h"
+#include "common/macros.h"
 #include "common/rid.h"
 #include "storage/page/b_plus_tree_internal_page.h"
 #include "storage/page/b_plus_tree_leaf_page.h"
@@ -64,6 +65,42 @@ auto B_PLUS_TREE_LEAF_PAGE_TYPE::GetLastIndexLE(const KeyType &key, const KeyCom
     }
   }
   return res;
+}
+
+INDEX_TEMPLATE_ARGUMENTS
+auto B_PLUS_TREE_LEAF_PAGE_TYPE::GetLastIndexL(const KeyType &key, const KeyComparator &comparator) const -> int {
+  int l = 0;
+  int r = GetSize() - 1;
+  int res = -1;
+  while (l <= r) {
+    int mid = (l + r) >> 1;
+    if (comparator(KeyAt(mid), key) < 0) {
+      l = mid + 1;
+      res = mid;
+    } else {
+      r = mid - 1;
+    }
+  }
+  return res;
+}
+
+INDEX_TEMPLATE_ARGUMENTS
+auto B_PLUS_TREE_LEAF_PAGE_TYPE::GetIndexE(const KeyType &key, const KeyComparator &comparator) const -> int {
+  int l = 0;
+  int r = GetSize() - 1;
+  while (l <= r) {
+    int mid = (l + r) >> 1;
+    int comp_res = comparator(KeyAt(mid), key);
+    if (comp_res == 0) {
+      return mid;
+    }
+    if (comp_res < 0) {
+      l = mid + 1;
+    } else {
+      r = mid - 1;
+    }
+  }
+  return -1;
 }
 
 /*
@@ -123,6 +160,13 @@ void B_PLUS_TREE_LEAF_PAGE_TYPE::CopyBackward(int index) {
 }
 
 INDEX_TEMPLATE_ARGUMENTS
+void B_PLUS_TREE_LEAF_PAGE_TYPE::CopyForward(int index) {
+  for (int i = index + 1; i < GetSize(); i++) {
+    *(array_ + i - 1) = *(array_ + i);
+  }
+}
+
+INDEX_TEMPLATE_ARGUMENTS
 void B_PLUS_TREE_LEAF_PAGE_TYPE::CopySecondHalfTo(BPlusTreeLeafPage *other) {
   int size = GetSize();
   int start = size / 2;
@@ -133,12 +177,62 @@ void B_PLUS_TREE_LEAF_PAGE_TYPE::CopySecondHalfTo(BPlusTreeLeafPage *other) {
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-void B_PLUS_TREE_LEAF_PAGE_TYPE::InsertData(const KeyType &key, const ValueType &value, const KeyComparator &comparator) {
-  int index = GetLastIndexLE(key, comparator); // recall index corresponds to the last less or equal key
+void B_PLUS_TREE_LEAF_PAGE_TYPE::CopyFirstNTo(int n, BPlusTreeLeafPage *other) {
+  BUSTUB_ASSERT(n <= GetSize(), "Error");
+  for (int i = other->GetSize(), j = 0; j < n; i++, j++) {
+    *(other->array_ + i) = *(array_ + j);
+  }
+  other->IncreaseSize(n);
+  this->IncreaseSize(-n);
+  int cur_size = GetSize();
+  for (int i = 0; i < cur_size; i++) {
+    *(array_ + i) = *(array_ + i + n);
+  }
+}
+
+INDEX_TEMPLATE_ARGUMENTS
+void B_PLUS_TREE_LEAF_PAGE_TYPE::CopyBackNTo(int n, BPlusTreeLeafPage *other) {
+  BUSTUB_ASSERT(n <= GetSize(), "Error");
+  other->IncreaseSize(n);
+  for (int i = other->GetSize() - 1; i >= n; i--) {
+    *(other->array_ + i) = *(other->array_ + i - n);
+  }
+  this->IncreaseSize(-n);
+  for (int i = 0, j = GetSize(); i < n; i++, j++) {
+    *(other->array_ + i) = *(array_ + j);
+  }
+}
+
+INDEX_TEMPLATE_ARGUMENTS
+auto B_PLUS_TREE_LEAF_PAGE_TYPE::InsertData(const KeyType &key, const ValueType &value, const KeyComparator &comparator)
+    -> int {
+  int index = GetLastIndexLE(key, comparator);  // recall index corresponds to the last less or equal key
+  if (index != -1 && comparator(KeyAt(index), key) == 0) {
+    return -1;
+  }
   CopyBackward(index + 1);
   IncreaseSize(1);
   SetKeyAt(index + 1, key);
   SetValueAt(index + 1, value);
+  return index + 1;
+}
+
+INDEX_TEMPLATE_ARGUMENTS
+auto B_PLUS_TREE_LEAF_PAGE_TYPE::RemoveData(const KeyType &key, const KeyComparator &comparator) -> int {
+  int index = GetIndexE(key, comparator);
+  if (index == -1) {
+    return -1;
+  }
+  RemoveData(index);
+  return index;
+}
+
+INDEX_TEMPLATE_ARGUMENTS
+auto B_PLUS_TREE_LEAF_PAGE_TYPE::RemoveData(int index) -> MappingType {
+  MappingType data = *(array_ + index);
+  CopyForward(index);
+  IncreaseSize(-1);
+  return data;
 }
 
 template class BPlusTreeLeafPage<GenericKey<4>, RID, GenericComparator<4>>;

@@ -57,6 +57,7 @@ class BPlusTreePage {
   auto GetMinSize() const -> int;
 
   auto SizeExceeded() const -> bool;
+  auto SizeNotEnough() const -> bool;
 
  private:
   // member variable, attributes that both internal and leaf page share

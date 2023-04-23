@@ -50,21 +50,39 @@ class BPlusTreeInternalPage : public BPlusTreePage {
 
   /**
    * @brief Get the Last Index Less object
-   * 
-   * @param key 
-   * @param comparator 
-   * @return int 
+   *
+   * @param key
+   * @param comparator
+   * @return int
    */
   auto GetLastIndexL(const KeyType &key, const KeyComparator &comparator) const -> int;
-  
+
+  /**
+   * @brief Get the Last Index Less or Equal object
+   *
+   * @param key
+   * @param comparator
+   * @return int
+   */
+  auto GetLastIndexLE(const KeyType &key, const KeyComparator &comparator) const -> int;
+
   /**
    * @brief Get the First Index Greater or Equal object
+   *
+   * @param key
+   * @param comparator
+   * @return int
+   */
+  auto GetFirstIndexGE(const KeyType &key, const KeyComparator &comparator) const -> int;
+
+  /**
+   * @brief Get the Index Equal object
    * 
    * @param key 
    * @param comparator 
    * @return int 
    */
-  auto GetFirstIndexGE(const KeyType &key, const KeyComparator &comparator) const -> int;
+  auto GetIndexE(const KeyType &key, const KeyComparator &comparator) const -> int;
 
   /**
    * @param index The index of the key to get. Index must be non-zero.
@@ -81,10 +99,10 @@ class BPlusTreeInternalPage : public BPlusTreePage {
 
   /**
    * @brief Set the Data At object
-   * 
-   * @param index 
-   * @param key 
-   * @param value 
+   *
+   * @param index
+   * @param key
+   * @param value
    */
   void SetDataAt(int index, const KeyType &key, const ValueType &value);
 
@@ -110,10 +128,20 @@ class BPlusTreeInternalPage : public BPlusTreePage {
 
   void CopyBackward(int index);
 
+  void CopyForward(int index);
+
   void CopySecondHalfTo(BPlusTreeInternalPage *other);
+
+  void CopyFirstNTo(int n, BPlusTreeInternalPage *other);
+
+  void CopyBackNTo(int n, BPlusTreeInternalPage *other);
 
   void InsertData(const KeyType &key, const ValueType &value, const KeyComparator &comparator);
 
+  auto RemoveData(const KeyType &key, const KeyComparator &comparator) -> int;
+
+  auto RemoveData(int index) -> MappingType;
+      
   /**
    * @brief For test only, return a string representing all keys in
    * this internal page, formatted as "(key1,key2,key3,...)"
