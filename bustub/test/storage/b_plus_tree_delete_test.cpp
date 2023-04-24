@@ -23,6 +23,10 @@ namespace bustub {
 
 using bustub::DiskManagerUnlimitedMemory;
 
+TEST(BPlusTreeTests, DeleteTestCustom1) {
+  
+}
+
 TEST(BPlusTreeTests, DeleteTest1) {
   // create KeyComparator and index schema
   auto key_schema = ParseCreateStatement("a bigint");

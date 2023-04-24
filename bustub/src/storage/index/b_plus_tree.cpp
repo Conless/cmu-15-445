@@ -393,7 +393,10 @@ auto BPLUSTREE_TYPE::RemoveInLeafPage(const KeyType &key, Context *ctx) -> std::
   if (index == -1) {
     return {false, KeyType()};
   }
-  std::pair<bool, KeyType> res = {true, leaf_page->KeyAt(index)};
+  std::pair<bool, KeyType> res = {true, KeyType()};
+  if (index == 0) {
+    res.second = leaf_page->KeyAt(index);
+  }
   WritePageGuard cur_guard = std::move(ctx->write_set_.back());
   ctx->write_set_.pop_back();
   if (leaf_page->SizeNotEnough() && !ctx->write_set_.empty()) {
