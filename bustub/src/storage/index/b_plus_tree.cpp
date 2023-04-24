@@ -379,11 +379,10 @@ auto BPLUSTREE_TYPE::RemoveInPage(const KeyType &key, Context *ctx) -> std::pair
     if (internal_page->SizeNotEnough() && !ctx->write_set_.empty()) {
       auto last_page = ctx->write_set_.back().AsMut<InternalPage>();
       int index = last_page->GetLastIndexLE(key, comparator_);
-      if (!ReplenishInternalPage(internal_page, last_page, index) &&
-          !CoalesceInternalPage(internal_page, last_page, index)) {
-        if (internal_page->GetSize() == 0) {
-          last_page->RemoveData(index);
-        }
+      if (internal_page->GetSize() == 0) {
+        last_page->RemoveData(index);
+      } else if (!ReplenishInternalPage(internal_page, last_page, index)) {
+        CoalesceInternalPage(internal_page, last_page, index);
       }
     }
   }
@@ -406,10 +405,10 @@ auto BPLUSTREE_TYPE::RemoveInLeafPage(const KeyType &key, Context *ctx) -> std::
   if (leaf_page->SizeNotEnough() && !ctx->write_set_.empty()) {
     auto last_page = ctx->write_set_.back().AsMut<InternalPage>();
     int index = last_page->GetLastIndexLE(key, comparator_);
-    if (!ReplenishLeafPage(leaf_page, last_page, index) && !CoalesceLeafPage(leaf_page, last_page, index)) {
-      if (leaf_page->GetSize() == 0) {
-        last_page->RemoveData(index);
-      }
+    if (leaf_page->GetSize() == 0) {
+      last_page->RemoveData(index);
+    } else if (!ReplenishLeafPage(leaf_page, last_page, index)) {
+      CoalesceLeafPage(leaf_page, last_page, index);
     }
   }
   return res;
@@ -544,7 +543,7 @@ auto BPLUSTREE_TYPE::CoalesceInternalPage(InternalPage *cur_page, InternalPage *
  * @return : index iterator
  */
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREE_TYPE::Begin() -> INDEXITERATOR_TYPE { return INDEXITERATOR_TYPE(); }
+auto BPLUSTREE_TYPE::Begin() -> INDEXITERATOR_TYPE { return End(); }
 
 /*
  * Input parameter is low key, find the leaf page that contains the input key
@@ -552,7 +551,7 @@ auto BPLUSTREE_TYPE::Begin() -> INDEXITERATOR_TYPE { return INDEXITERATOR_TYPE()
  * @return : index iterator
  */
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREE_TYPE::Begin(const KeyType &key) -> INDEXITERATOR_TYPE { return INDEXITERATOR_TYPE(); }
+auto BPLUSTREE_TYPE::Begin(const KeyType &key) -> INDEXITERATOR_TYPE { return End(); }
 
 /*
  * Input parameter is void, construct an index iterator representing the end
@@ -560,7 +559,7 @@ auto BPLUSTREE_TYPE::Begin(const KeyType &key) -> INDEXITERATOR_TYPE { return IN
  * @return : index iterator
  */
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREE_TYPE::End() -> INDEXITERATOR_TYPE { return INDEXITERATOR_TYPE(); }
+auto BPLUSTREE_TYPE::End() -> INDEXITERATOR_TYPE { return INDEXITERATOR_TYPE(INVALID_PAGE_ID, 0, bpm_); }
 
 /*****************************************************************************
  * BASIC OPERATIONS
