@@ -158,6 +158,8 @@ class BPlusTree<KeyType, ValueType, KeyComparator, true> {
    */
   auto InsertIntoPage(const KeyType &key, const ValueType &value, Context *ctx) -> bool;
   auto InsertIntoLeafPage(const KeyType &key, const ValueType &value, Context *ctx) -> bool;
+  auto ShiftLeafPage(LeafPage *cur_page, InternalPage *last_page, int index) -> bool;
+  auto ShiftInternalPage(InternalPage *cur_page, InternalPage *last_page, int index) -> bool;
   auto SplitLeafPage(LeafPage *cur_page, InternalPage *last_page) -> bool;
   auto SplitInternalPage(InternalPage *cur_page, InternalPage *last_page) -> bool;
 

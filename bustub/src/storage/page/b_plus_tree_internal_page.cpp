@@ -162,7 +162,7 @@ void B_PLUS_TREE_INTERNAL_PAGE_TYPE::SetDataAt(int index, const KeyType &key, co
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-void B_PLUS_TREE_INTERNAL_PAGE_TYPE::CopyBackward(int index) {
+void B_PLUS_TREE_INTERNAL_PAGE_TYPE::CopyLastward(int index) {
   for (int i = GetSize(); i > index; i--) {
     *(array_ + i) = *(array_ + i - 1);
   }
@@ -210,7 +210,7 @@ void B_PLUS_TREE_INTERNAL_PAGE_TYPE::CopyFirstNTo(int n, BPlusTreeInternalPage *
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-void B_PLUS_TREE_INTERNAL_PAGE_TYPE::CopyBackNTo(int n, BPlusTreeInternalPage *other) {
+void B_PLUS_TREE_INTERNAL_PAGE_TYPE::CopyLastNTo(int n, BPlusTreeInternalPage *other) {
   BUSTUB_ASSERT(n <= GetSize(), "Error");
   other->IncreaseSize(n);
   for (int i = other->GetSize() - 1; i >= n; i--) {
@@ -226,7 +226,7 @@ INDEX_TEMPLATE_ARGUMENTS
 void B_PLUS_TREE_INTERNAL_PAGE_TYPE::InsertData(const KeyType &key, const ValueType &value,
                                                 const KeyComparator &comparator) {
   int index = GetFirstIndexGE(key, comparator);  // recall index corresponds to the first greater or equal key
-  CopyBackward(index);
+  CopyLastward(index);
   IncreaseSize(1);
   SetKeyAt(index, key);
   SetValueAt(index, value);

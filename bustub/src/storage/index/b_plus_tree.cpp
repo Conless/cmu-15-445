@@ -217,7 +217,10 @@ auto BPLUSTREE_TYPE::InsertIntoPage(const KeyType &key, const ValueType &value, 
     ctx->write_set_.pop_back();
     if (internal_page->SizeExceeded() && !ctx->write_set_.empty()) {
       auto last_page = ctx->write_set_.back().AsMut<InternalPage>();
-      SplitInternalPage(internal_page, last_page);
+      int index = last_page->GetLastIndexLE(key, comparator_);
+      if (!ShiftInternalPage(internal_page, last_page, index)) {
+        SplitInternalPage(internal_page, last_page);
+      }
     }
     return true;
   }
@@ -233,9 +236,72 @@ auto BPLUSTREE_TYPE::InsertIntoLeafPage(const KeyType &key, const ValueType &val
   ctx->write_set_.pop_back();
   if (leaf_page->SizeExceeded() && !ctx->write_set_.empty()) {
     auto last_page = ctx->write_set_.back().AsMut<InternalPage>();
-    SplitLeafPage(leaf_page, last_page);
+    int index = last_page->GetLastIndexLE(key, comparator_);
+    if (!ShiftLeafPage(leaf_page, last_page, index)) {
+      SplitLeafPage(leaf_page, last_page);
+    }
   }
   return res;
+}
+
+INDEX_TEMPLATE_ARGUMENTS
+auto BPLUSTREE_TYPE::ShiftLeafPage(LeafPage *cur_page, InternalPage *last_page, int index) -> bool {
+  bool shifted = false;
+  if (index != last_page->GetSize() - 1) {
+    page_id_t next_leaf_id = last_page->ValueAt(index + 1);
+    WritePageGuard next_leaf_guard = bpm_->FetchPageWrite(next_leaf_id);
+    auto next_leaf_page = next_leaf_guard.AsMut<LeafPage>();
+    int size_diff = cur_page->GetSize() - next_leaf_page->GetSize();
+    if (size_diff >= 2) {
+      cur_page->CopyLastNTo(size_diff / 2, next_leaf_page);
+      last_page->KeyAt(index + 1) = next_leaf_page->KeyAt(0);
+      shifted = true;
+    }
+  }
+  if (!shifted && index != 0) {
+    page_id_t last_leaf_id = last_page->ValueAt(index - 1);
+    WritePageGuard last_leaf_guard = bpm_->FetchPageWrite(last_leaf_id);
+    auto last_leaf_page = last_leaf_guard.AsMut<LeafPage>();
+    int size_diff = cur_page->GetSize() - last_leaf_page->GetSize();
+    if (size_diff >= 2) {
+      cur_page->CopyFirstNTo(size_diff / 2, last_leaf_page);
+      last_page->KeyAt(index) = cur_page->KeyAt(0);
+      shifted = true;
+    }
+  }
+  return shifted;
+}
+
+INDEX_TEMPLATE_ARGUMENTS
+auto BPLUSTREE_TYPE::ShiftInternalPage(InternalPage *cur_page, InternalPage *last_page, int index) -> bool {
+  bool shifted = false;
+  if (index != last_page->GetSize() - 1) {
+    page_id_t next_internal_id = last_page->ValueAt(index + 1);
+    WritePageGuard next_internal_guard = bpm_->FetchPageWrite(next_internal_id);
+    auto next_internal_page = next_internal_guard.AsMut<InternalPage>();
+    int size_diff = cur_page->GetSize() - next_internal_page->GetSize();
+    if (size_diff >= 2) {
+      next_internal_page->SetKeyAt(0, last_page->KeyAt(index + 1));
+      cur_page->CopyLastNTo(size_diff / 2, next_internal_page);
+      last_page->SetKeyAt(index + 1, next_internal_page->KeyAt(0));
+      next_internal_page->SetKeyAt(0, KeyType());
+      shifted = true;
+    }
+  }
+  if (!shifted && index != 0) {
+    page_id_t last_internal_id = last_page->ValueAt(index - 1);
+    WritePageGuard last_internal_guard = bpm_->FetchPageWrite(last_internal_id);
+    auto last_internal_page = last_internal_guard.AsMut<InternalPage>();
+    int size_diff = cur_page->GetSize() - last_internal_page->GetSize();
+    if (size_diff >= 2) {
+      cur_page->SetKeyAt(0, last_page->KeyAt(index));
+      cur_page->CopyFirstNTo(size_diff / 2, last_internal_page);
+      last_page->SetKeyAt(index, cur_page->KeyAt(0));
+      cur_page->SetKeyAt(0, KeyType());
+      shifted = true;
+    }
+  }
+  return shifted;
 }
 
 INDEX_TEMPLATE_ARGUMENTS
@@ -354,6 +420,7 @@ auto BPLUSTREE_TYPE::ReplenishLeafPage(LeafPage *cur_page, InternalPage *last_pa
     int size_diff = next_leaf_page->GetSize() - cur_page->GetSize();
     if (size_diff >= 2) {
       next_leaf_page->CopyFirstNTo(size_diff / 2, cur_page);
+      last_page->KeyAt(index + 1) = next_leaf_page->KeyAt(0);
       replenished = true;
     }
   }
@@ -363,7 +430,8 @@ auto BPLUSTREE_TYPE::ReplenishLeafPage(LeafPage *cur_page, InternalPage *last_pa
     auto last_leaf_page = last_leaf_guard.AsMut<LeafPage>();
     int size_diff = last_leaf_page->GetSize() - cur_page->GetSize();
     if (size_diff >= 2) {
-      last_leaf_page->CopyBackNTo(size_diff / 2, cur_page);
+      last_leaf_page->CopyLastNTo(size_diff / 2, cur_page);
+      last_page->KeyAt(index) = cur_page->KeyAt(0);
       replenished = true;
     }
   }
@@ -393,7 +461,7 @@ auto BPLUSTREE_TYPE::ReplenishInternalPage(InternalPage *cur_page, InternalPage 
     int size_diff = last_internal_page->GetSize() - cur_page->GetSize();
     if (size_diff >= 2) {
       cur_page->SetKeyAt(0, last_page->KeyAt(index + 1));
-      last_internal_page->CopyBackNTo(size_diff / 2, cur_page);
+      last_internal_page->CopyLastNTo(size_diff / 2, cur_page);
       last_page->SetKeyAt(index, cur_page->KeyAt(0));
       cur_page->SetKeyAt(0, KeyType());
       replenished = true;

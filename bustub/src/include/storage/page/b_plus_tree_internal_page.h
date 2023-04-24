@@ -126,7 +126,7 @@ class BPlusTreeInternalPage : public BPlusTreePage {
    */
   void SetValueAt(int index, const ValueType &value);
 
-  void CopyBackward(int index);
+  void CopyLastward(int index);
 
   void CopyForward(int index);
 
@@ -134,7 +134,7 @@ class BPlusTreeInternalPage : public BPlusTreePage {
 
   void CopyFirstNTo(int n, BPlusTreeInternalPage *other);
 
-  void CopyBackNTo(int n, BPlusTreeInternalPage *other);
+  void CopyLastNTo(int n, BPlusTreeInternalPage *other);
 
   void InsertData(const KeyType &key, const ValueType &value, const KeyComparator &comparator);
 

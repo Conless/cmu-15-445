@@ -153,7 +153,7 @@ void B_PLUS_TREE_LEAF_PAGE_TYPE::SetDataAt(int index, const KeyType &key, const 
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-void B_PLUS_TREE_LEAF_PAGE_TYPE::CopyBackward(int index) {
+void B_PLUS_TREE_LEAF_PAGE_TYPE::CopyLastward(int index) {
   for (int i = GetSize(); i > index; i--) {
     *(array_ + i) = *(array_ + i - 1);
   }
@@ -191,7 +191,7 @@ void B_PLUS_TREE_LEAF_PAGE_TYPE::CopyFirstNTo(int n, BPlusTreeLeafPage *other) {
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-void B_PLUS_TREE_LEAF_PAGE_TYPE::CopyBackNTo(int n, BPlusTreeLeafPage *other) {
+void B_PLUS_TREE_LEAF_PAGE_TYPE::CopyLastNTo(int n, BPlusTreeLeafPage *other) {
   BUSTUB_ASSERT(n <= GetSize(), "Error");
   other->IncreaseSize(n);
   for (int i = other->GetSize() - 1; i >= n; i--) {
@@ -210,7 +210,7 @@ auto B_PLUS_TREE_LEAF_PAGE_TYPE::InsertData(const KeyType &key, const ValueType 
   if (index != -1 && comparator(KeyAt(index), key) == 0) {
     return -1;
   }
-  CopyBackward(index + 1);
+  CopyLastward(index + 1);
   IncreaseSize(1);
   SetKeyAt(index + 1, key);
   SetValueAt(index + 1, value);

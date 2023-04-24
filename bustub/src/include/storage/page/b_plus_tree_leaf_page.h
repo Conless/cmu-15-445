@@ -110,7 +110,7 @@ class BPlusTreeLeafPage : public BPlusTreePage {
 
   auto RemoveData(int index) -> MappingType;
 
-  void CopyBackward(int index);
+  void CopyLastward(int index);
 
   void CopyForward(int index);
 
@@ -118,7 +118,7 @@ class BPlusTreeLeafPage : public BPlusTreePage {
 
   void CopyFirstNTo(int n, BPlusTreeLeafPage *other);
 
-  void CopyBackNTo(int n, BPlusTreeLeafPage *other);
+  void CopyLastNTo(int n, BPlusTreeLeafPage *other);
 
   /**
    * @brief for test only return a string representing all keys in
