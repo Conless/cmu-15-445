@@ -8,6 +8,7 @@
 #include "common/macros.h"
 #include "common/rid.h"
 #include "storage/index/b_plus_tree.h"
+#include "storage/index/index_iterator.h"
 #include "storage/page/b_plus_tree_header_page.h"
 #include "storage/page/b_plus_tree_page.h"
 #include "storage/page/page_guard.h"
@@ -464,7 +465,7 @@ auto BPLUSTREE_TYPE::ReplenishInternalPage(InternalPage *cur_page, InternalPage 
     auto last_internal_page = last_internal_guard.AsMut<InternalPage>();
     int size_diff = last_internal_page->GetSize() - cur_page->GetSize();
     if (size_diff >= 2) {
-      cur_page->SetKeyAt(0, last_page->KeyAt(index + 1));
+      cur_page->SetKeyAt(0, last_page->KeyAt(index));
       last_internal_page->CopyLastNTo(size_diff / 2, cur_page);
       last_page->SetKeyAt(index, cur_page->KeyAt(0));
       cur_page->SetKeyAt(0, KeyType());
@@ -543,7 +544,23 @@ auto BPLUSTREE_TYPE::CoalesceInternalPage(InternalPage *cur_page, InternalPage *
  * @return : index iterator
  */
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREE_TYPE::Begin() -> INDEXITERATOR_TYPE { return End(); }
+auto BPLUSTREE_TYPE::Begin() -> INDEXITERATOR_TYPE {
+  page_id_t next_page_id = GetRootPageId();
+  if (next_page_id == INVALID_PAGE_ID) {
+    return End();
+  }
+  ReadPageGuard cur_guard = bpm_->FetchPageRead(next_page_id);
+  auto cur_page = cur_guard.As<BPlusTreePage>();
+  while (!cur_page->IsLeafPage()) {
+    next_page_id = reinterpret_cast<const InternalPage *>(cur_page)->ValueAt(0);
+    cur_guard = bpm_->FetchPageRead(next_page_id);
+    cur_page = cur_guard.As<BPlusTreePage>();
+  }
+  if (cur_page->GetSize() == 0) {
+    return End();
+  }
+  return INDEXITERATOR_TYPE(next_page_id, 0, bpm_);
+}
 
 /*
  * Input parameter is low key, find the leaf page that contains the input key
@@ -551,7 +568,27 @@ auto BPLUSTREE_TYPE::Begin() -> INDEXITERATOR_TYPE { return End(); }
  * @return : index iterator
  */
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREE_TYPE::Begin(const KeyType &key) -> INDEXITERATOR_TYPE { return End(); }
+auto BPLUSTREE_TYPE::Begin(const KeyType &key) -> INDEXITERATOR_TYPE {
+  page_id_t next_page_id = GetRootPageId();
+  if (next_page_id == INVALID_PAGE_ID) {
+    return End();
+  }
+  ReadPageGuard cur_guard = bpm_->FetchPageRead(next_page_id);
+  auto cur_page = cur_guard.As<BPlusTreePage>();
+  while (!cur_page->IsLeafPage()) {
+    next_page_id = reinterpret_cast<const InternalPage *>(cur_page)->GetLastIndexLE(key, comparator_);
+    cur_guard = bpm_->FetchPageRead(next_page_id);
+    cur_page = cur_guard.As<BPlusTreePage>();
+  }
+  if (cur_page->GetSize() == 0) {
+    return End();
+  }
+  int index = reinterpret_cast<const LeafPage *>(cur_page)->GetIndexE(key, comparator_);
+  if (index == -1) {
+    return End();
+  }
+  return INDEXITERATOR_TYPE(next_page_id, index, bpm_);
+}
 
 /*
  * Input parameter is void, construct an index iterator representing the end
