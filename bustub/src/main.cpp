@@ -2,7 +2,7 @@
 #include <random>
 #include "buffer/buffer_pool_manager.h"
 #include "storage/disk/disk_manager_memory.h"
-#include "storage/index/b_plus_tree.h"
+#include "storage/index/b_plus_tree_nts.h"
 #include "test_util.h"  // NOLINT
 
 using namespace bustub;  // NOLINT
@@ -23,7 +23,7 @@ auto main() -> int {
 //   std::cin >> leaf_max_size;
 //   std::cout << "Type in the maximum internal page size: ";
 //   std::cin >> internal_max_size;
-  BPlusTree<GenericKey<8>, RID, GenericComparator<8>> tree("foo_pk", header_page->GetPageId(), bpm, comparator);
+  BPlusTree<GenericKey<8>, RID, GenericComparator<8>, false> tree("foo_pk", header_page->GetPageId(), bpm, comparator);
   GenericKey<8> index_key;
   RID rid;
   // create transaction
@@ -57,28 +57,28 @@ auto main() -> int {
     tree.Remove(index_key, transaction);
   }
   std::cout << "Finish remove\n";
-  std::shuffle(vec.begin(), vec.end(), std::mt19937(std::random_device()()));
-  for (auto key : vec) {
-    if (opt == 2) {
-      std::cin >> key;
-    } else {
-    //   std::cout << key << " ";
-    }
-    index_key.SetFromInteger(key);
-    tree.Insert(index_key, rid, transaction);
-  }
-  std::cout << "Finish insert\n";
-  std::shuffle(vec.begin(), vec.end(), std::mt19937(std::random_device()()));
-  for (auto key : vec) {
-    if (opt == 2) {
-      std::cin >> key;
-    } else {
-    //   std::cout << key << " ";
-    }
-    index_key.SetFromInteger(key);
-    tree.Remove(index_key, transaction);
-  }
-  std::cout << "Finish remove\n";
+//   std::shuffle(vec.begin(), vec.end(), std::mt19937(std::random_device()()));
+//   for (auto key : vec) {
+//     if (opt == 2) {
+//       std::cin >> key;
+//     } else {
+//     //   std::cout << key << " ";
+//     }
+//     index_key.SetFromInteger(key);
+//     tree.Insert(index_key, rid, transaction);
+//   }
+//   std::cout << "Finish insert\n";
+//   std::shuffle(vec.begin(), vec.end(), std::mt19937(std::random_device()()));
+//   for (auto key : vec) {
+//     if (opt == 2) {
+//       std::cin >> key;
+//     } else {
+//     //   std::cout << key << " ";
+//     }
+//     index_key.SetFromInteger(key);
+//     tree.Remove(index_key, transaction);
+//   }
+//   std::cout << "Finish remove\n";
   bpm->UnpinPage(HEADER_PAGE_ID, true);
   delete transaction;
   delete bpm;
