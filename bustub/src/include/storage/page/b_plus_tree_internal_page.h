@@ -77,10 +77,10 @@ class BPlusTreeInternalPage : public BPlusTreePage {
 
   /**
    * @brief Get the Index Equal object
-   * 
-   * @param key 
-   * @param comparator 
-   * @return int 
+   *
+   * @param key
+   * @param comparator
+   * @return int
    */
   auto GetIndexE(const KeyType &key, const KeyComparator &comparator) const -> int;
 
@@ -141,7 +141,7 @@ class BPlusTreeInternalPage : public BPlusTreePage {
   auto RemoveData(const KeyType &key, const KeyComparator &comparator) -> int;
 
   auto RemoveData(int index) -> MappingType;
-      
+
   /**
    * @brief For test only, return a string representing all keys in
    * this internal page, formatted as "(key1,key2,key3,...)"
