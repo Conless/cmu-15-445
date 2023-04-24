@@ -388,11 +388,7 @@ auto BPLUSTREE_TYPE::RemoveInPage(const KeyType &key, Context *ctx) -> std::pair
 
 INDEX_TEMPLATE_ARGUMENTS
 auto BPLUSTREE_TYPE::RemoveInLeafPage(const KeyType &key, Context *ctx) -> std::pair<bool, KeyType> {
-  auto cur_page = ctx->write_set_.back().AsMut<BPlusTreePage>();
-  if (cur_page->IsLeafPage()) {
-    return RemoveInLeafPage(key, ctx);
-  }
-  auto leaf_page = reinterpret_cast<LeafPage *>(cur_page);
+  auto leaf_page = ctx->write_set_.back().AsMut<LeafPage>();
   int index = leaf_page->RemoveData(key, comparator_);
   if (index == -1) {
     return {false, KeyType()};
