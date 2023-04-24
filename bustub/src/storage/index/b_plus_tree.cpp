@@ -254,7 +254,7 @@ auto BPLUSTREE_TYPE::ShiftLeafPage(LeafPage *cur_page, InternalPage *last_page, 
     int size_diff = cur_page->GetSize() - next_leaf_page->GetSize();
     if (size_diff >= 2) {
       cur_page->CopyLastNTo(size_diff / 2, next_leaf_page);
-      last_page->KeyAt(index + 1) = next_leaf_page->KeyAt(0);
+      last_page->SetKeyAt(index + 1, next_leaf_page->KeyAt(0));
       shifted = true;
     }
   }
@@ -265,7 +265,7 @@ auto BPLUSTREE_TYPE::ShiftLeafPage(LeafPage *cur_page, InternalPage *last_page, 
     int size_diff = cur_page->GetSize() - last_leaf_page->GetSize();
     if (size_diff >= 2) {
       cur_page->CopyFirstNTo(size_diff / 2, last_leaf_page);
-      last_page->KeyAt(index) = cur_page->KeyAt(0);
+      last_page->SetKeyAt(index, cur_page->KeyAt(0));
       shifted = true;
     }
   }
@@ -420,7 +420,7 @@ auto BPLUSTREE_TYPE::ReplenishLeafPage(LeafPage *cur_page, InternalPage *last_pa
     int size_diff = next_leaf_page->GetSize() - cur_page->GetSize();
     if (size_diff >= 2) {
       next_leaf_page->CopyFirstNTo(size_diff / 2, cur_page);
-      last_page->KeyAt(index + 1) = next_leaf_page->KeyAt(0);
+      last_page->SetKeyAt(index + 1, next_leaf_page->KeyAt(0));
       replenished = true;
     }
   }
@@ -431,7 +431,7 @@ auto BPLUSTREE_TYPE::ReplenishLeafPage(LeafPage *cur_page, InternalPage *last_pa
     int size_diff = last_leaf_page->GetSize() - cur_page->GetSize();
     if (size_diff >= 2) {
       last_leaf_page->CopyLastNTo(size_diff / 2, cur_page);
-      last_page->KeyAt(index) = cur_page->KeyAt(0);
+      last_page->SetKeyAt(index, cur_page->KeyAt(0));
       replenished = true;
     }
   }

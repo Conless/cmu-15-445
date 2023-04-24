@@ -72,7 +72,7 @@ class BPlusTreeLeafPage : public BPlusTreePage {
    * @param index The index of the key to get. Index must be non-zero.
    * @return Key at index
    */
-  auto KeyAt(int index) const -> KeyType;
+  auto KeyAt(int index) const -> const KeyType &;
 
   /**
    *
@@ -86,7 +86,7 @@ class BPlusTreeLeafPage : public BPlusTreePage {
    * @param index the index
    * @return the value at the index
    */
-  auto ValueAt(int index) const -> ValueType;
+  auto ValueAt(int index) const -> const ValueType &;
 
   /**
    *

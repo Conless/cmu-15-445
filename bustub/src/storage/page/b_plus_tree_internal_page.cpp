@@ -117,9 +117,9 @@ auto B_PLUS_TREE_INTERNAL_PAGE_TYPE::GetIndexE(const KeyType &key, const KeyComp
  * array offset)
  */
 INDEX_TEMPLATE_ARGUMENTS
-auto B_PLUS_TREE_INTERNAL_PAGE_TYPE::KeyAt(int index) const -> KeyType {
+auto B_PLUS_TREE_INTERNAL_PAGE_TYPE::KeyAt(int index) const -> const KeyType & {
   if (index < 0 || index >= GetSize()) {
-    return KeyType{};
+    throw Exception(ExceptionType::OUT_OF_RANGE, "index out of range", true);
   }
   return (array_ + index)->first;
 }
@@ -127,7 +127,7 @@ auto B_PLUS_TREE_INTERNAL_PAGE_TYPE::KeyAt(int index) const -> KeyType {
 INDEX_TEMPLATE_ARGUMENTS
 void B_PLUS_TREE_INTERNAL_PAGE_TYPE::SetKeyAt(int index, const KeyType &key) {
   if (index < 0 || index >= GetSize()) {
-    return;
+    throw Exception(ExceptionType::OUT_OF_RANGE, "index out of range", true);
   }
   (array_ + index)->first = key;
 }
@@ -137,9 +137,9 @@ void B_PLUS_TREE_INTERNAL_PAGE_TYPE::SetKeyAt(int index, const KeyType &key) {
  * offset)
  */
 INDEX_TEMPLATE_ARGUMENTS
-auto B_PLUS_TREE_INTERNAL_PAGE_TYPE::ValueAt(int index) const -> ValueType {
+auto B_PLUS_TREE_INTERNAL_PAGE_TYPE::ValueAt(int index) const -> const ValueType & {
   if (index < 0 || index >= GetSize()) {
-    return ValueType{};
+    throw Exception(ExceptionType::OUT_OF_RANGE, "index out of range", true);
   }
   return (array_ + index)->second;
 }
@@ -147,15 +147,15 @@ auto B_PLUS_TREE_INTERNAL_PAGE_TYPE::ValueAt(int index) const -> ValueType {
 INDEX_TEMPLATE_ARGUMENTS
 void B_PLUS_TREE_INTERNAL_PAGE_TYPE::SetValueAt(int index, const ValueType &value) {
   if (index < 0 || index >= GetSize()) {
-    return;
+    throw Exception(ExceptionType::OUT_OF_RANGE, "index out of range", true);
   }
   (array_ + index)->second = value;
 }
 
 INDEX_TEMPLATE_ARGUMENTS
 void B_PLUS_TREE_INTERNAL_PAGE_TYPE::SetDataAt(int index, const KeyType &key, const ValueType &value) {
-  if (index < 1 || index >= GetSize()) {
-    return;
+  if (index < 0 || index >= GetSize()) {
+    throw Exception(ExceptionType::OUT_OF_RANGE, "index out of range", true);
   }
   (array_ + index)->first = key;
   (array_ + index)->second = value;

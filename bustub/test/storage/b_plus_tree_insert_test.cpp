@@ -77,14 +77,11 @@ TEST(BPlusTreeTests, InsertTestCustom2) {
   // create transaction
   auto *transaction = new Transaction(0);
 
-  std::vector<int64_t> keys = {1, 1, 1, 1, 1};
-  index_key.SetFromInteger(1);
-  tree.Insert(index_key, rid, transaction);
-  for (auto key : keys) {
-    int64_t value = key & 0xFFFFFFFF;
-    rid.Set(static_cast<int32_t>(key >> 32), value);
+  int key;
+  while (std::cin >> key) {
     index_key.SetFromInteger(key);
-    ASSERT_EQ(tree.Insert(index_key, rid, transaction), false);
+    tree.Insert(index_key, rid, transaction);
+    std::cout << tree.DrawBPlusTree() << std::endl;
   }
 
   bpm->UnpinPage(HEADER_PAGE_ID, true);
@@ -154,9 +151,9 @@ TEST(BPlusTreeTests, InsertTest2) {
     rid.Set(static_cast<int32_t>(key >> 32), value);
     index_key.SetFromInteger(key);
     tree.Insert(index_key, rid, transaction);
+    std::cout << tree.DrawBPlusTree() << std::endl;
   }
 
-  std::cout << tree.DrawBPlusTree() << std::endl;
   std::vector<RID> rids;
   for (auto key : keys) {
     rids.clear();
