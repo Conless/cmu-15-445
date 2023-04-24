@@ -13,7 +13,9 @@
  * For range scan of b+ tree
  */
 #pragma once
+#include "buffer/buffer_pool_manager.h"
 #include "storage/page/b_plus_tree_leaf_page.h"
+#include "storage/page/page_guard.h"
 
 namespace bustub {
 
@@ -21,23 +23,34 @@ namespace bustub {
 
 INDEX_TEMPLATE_ARGUMENTS
 class IndexIterator {
+  using LeafPage = BPlusTreeLeafPage<KeyType, ValueType, KeyComparator>;
+
  public:
   // you may define your own constructor based on your member variables
-  IndexIterator();
-  ~IndexIterator();  // NOLINT
+  IndexIterator(page_id_t page_id, int index_in_page, BufferPoolManager *bpm);
+  ~IndexIterator();
 
-  auto IsEnd() -> bool;
+  auto IsEnd() const -> bool;
 
   auto operator*() -> const MappingType &;
 
   auto operator++() -> IndexIterator &;
 
-  auto operator==(const IndexIterator &itr) const -> bool { throw std::runtime_error("unimplemented"); }
+  auto operator==(const IndexIterator &itr) const -> bool {
+    if (IsEnd()) {
+      return itr.IsEnd();
+    }
+    return (bpm_ == itr.bpm_) && (page_id_ == itr.page_id_);
+  }
 
-  auto operator!=(const IndexIterator &itr) const -> bool { throw std::runtime_error("unimplemented"); }
+  auto operator!=(const IndexIterator &itr) const -> bool { return !(*this == itr); }
 
  private:
   // add your own private member variables here
+  BasicPageGuard page_guard_;
+  page_id_t page_id_;
+  int index_in_page_;
+  BufferPoolManager *bpm_;
 };
 
 }  // namespace bustub
