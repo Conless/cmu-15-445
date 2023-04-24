@@ -347,10 +347,10 @@ auto BPLUSTREE_TYPE::Remove(const KeyType &key, Transaction *txn) -> bool {
     WritePageGuard cur_guard = GetRootGuardWrite();
     auto cur_page = cur_guard.AsMut<BPlusTreePage>();
     if (!cur_page->IsLeafPage() && cur_page->GetSize() == 1) {
-    //   page_id_t old_root_id = GetRootPageId();
+      //   page_id_t old_root_id = GetRootPageId();
       auto internal_page = reinterpret_cast<InternalPage *>(cur_page);
       SetNewRoot(internal_page->ValueAt(0));
-    //   bpm_->DeletePage(old_root_id);
+      //   bpm_->DeletePage(old_root_id);
     }
     return true;
   }
@@ -372,14 +372,18 @@ auto BPLUSTREE_TYPE::RemoveInPage(const KeyType &key, Context *ctx) -> std::pair
   WritePageGuard cur_guard = std::move(ctx->write_set_.back());
   ctx->write_set_.pop_back();
   if (res.first) {
-    if (next_remove_index > 0 && comparator_(internal_page->KeyAt(next_remove_index), key) == 0) {
+    if (next_remove_index > 0 && next_remove_index < internal_page->GetSize() &&
+        comparator_(internal_page->KeyAt(next_remove_index), key) == 0) {
       internal_page->SetKeyAt(next_remove_index, res.second);
     }
     if (internal_page->SizeNotEnough() && !ctx->write_set_.empty()) {
       auto last_page = ctx->write_set_.back().AsMut<InternalPage>();
       int index = last_page->GetLastIndexLE(key, comparator_);
-      if (!ReplenishInternalPage(internal_page, last_page, index)) {
-        CoalesceInternalPage(internal_page, last_page, index);
+      if (!ReplenishInternalPage(internal_page, last_page, index) &&
+          !CoalesceInternalPage(internal_page, last_page, index)) {
+        if (internal_page->GetSize() == 0) {
+          last_page->RemoveData(index);
+        }
       }
     }
   }
@@ -394,7 +398,7 @@ auto BPLUSTREE_TYPE::RemoveInLeafPage(const KeyType &key, Context *ctx) -> std::
     return {false, KeyType()};
   }
   std::pair<bool, KeyType> res = {true, KeyType()};
-  if (index == 0) {
+  if (index == 0 && leaf_page->GetSize() != 0) {
     res.second = leaf_page->KeyAt(index);
   }
   WritePageGuard cur_guard = std::move(ctx->write_set_.back());
@@ -402,8 +406,10 @@ auto BPLUSTREE_TYPE::RemoveInLeafPage(const KeyType &key, Context *ctx) -> std::
   if (leaf_page->SizeNotEnough() && !ctx->write_set_.empty()) {
     auto last_page = ctx->write_set_.back().AsMut<InternalPage>();
     int index = last_page->GetLastIndexLE(key, comparator_);
-    if (!ReplenishLeafPage(leaf_page, last_page, index)) {
-      CoalesceLeafPage(leaf_page, last_page, index);
+    if (!ReplenishLeafPage(leaf_page, last_page, index) && !CoalesceLeafPage(leaf_page, last_page, index)) {
+      if (leaf_page->GetSize() == 0) {
+        last_page->RemoveData(index);
+      }
     }
   }
   return res;
@@ -480,7 +486,7 @@ auto BPLUSTREE_TYPE::CoalesceLeafPage(LeafPage *cur_page, InternalPage *last_pag
     if (size_sum <= leaf_max_size_) {
       next_leaf_page->CopyFirstNTo(next_leaf_page->GetSize(), cur_page);
       last_page->RemoveData(index + 1);
-    //   bpm_->DeletePage(next_leaf_id);
+      //   bpm_->DeletePage(next_leaf_id);
       coalesced = true;
     }
   }
@@ -492,7 +498,7 @@ auto BPLUSTREE_TYPE::CoalesceLeafPage(LeafPage *cur_page, InternalPage *last_pag
     if (size_sum <= leaf_max_size_) {
       cur_page->CopyFirstNTo(cur_page->GetSize(), last_leaf_page);
       last_page->RemoveData(index);
-    //   bpm_->DeletePage(cur_page->);
+      //   bpm_->DeletePage(cur_page->);
       coalesced = true;
     }
   }
@@ -510,7 +516,7 @@ auto BPLUSTREE_TYPE::CoalesceInternalPage(InternalPage *cur_page, InternalPage *
     if (size_sum <= internal_max_size_) {
       next_internal_page->SetKeyAt(0, last_page->RemoveData(index + 1).first);
       next_internal_page->CopyFirstNTo(next_internal_page->GetSize(), cur_page);
-    //   bpm_->DeletePage(next_leaf_id);
+      //   bpm_->DeletePage(next_leaf_id);
       coalesced = true;
     }
   }
@@ -522,7 +528,7 @@ auto BPLUSTREE_TYPE::CoalesceInternalPage(InternalPage *cur_page, InternalPage *
     if (size_sum <= internal_max_size_) {
       cur_page->SetKeyAt(0, last_page->RemoveData(index).first);
       cur_page->CopyFirstNTo(cur_page->GetSize(), last_internal_page);
-    //   bpm_->DeletePage(cur_page->);
+      //   bpm_->DeletePage(cur_page->);
       coalesced = true;
     }
   }
