@@ -51,7 +51,3 @@ target_link_libraries(
 target_include_directories(
         bustub PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
-
-add_executable(code "main.cpp")
-
-target_link_libraries(code bustub)
