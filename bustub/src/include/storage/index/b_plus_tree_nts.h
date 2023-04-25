@@ -6,6 +6,21 @@ namespace bustub {
 
 #define BPLUSTREENTS_TYPE BPlusTree<KeyType, ValueType, KeyComparator, false>
 
+class BasicContext {
+ public:
+  // When you insert into / remove from the B+ tree, store the write guard of header page here.
+  // Remember to drop the header page guard and set it to nullopt when you want to unlock all.
+  std::optional<WritePageGuard> header_page_{std::nullopt};
+
+  // Save the root page id here so that it's easier to know if the current page is the root page.
+  page_id_t root_page_id_{INVALID_PAGE_ID};
+
+  // Store the write guards of the pages that you're modifying here.
+  std::deque<BasicPageGuard> basic_set_;
+
+  auto IsRootPage(page_id_t page_id) -> bool { return page_id == root_page_id_; }
+};
+
 // Main class providing the API for the Interactive B+ Tree.
 
 INDEX_TEMPLATE_ARGUMENTS
@@ -84,10 +99,9 @@ class BPlusTree<KeyType, ValueType, KeyComparator, false> {
    * @brief Get the guard of root page. Latch permission of the header page is needed.
    *
    * @param create_new_root whether to create a new root when there's no root
-   * @return WritePageGuard
+   * @return BasicPageGuard
    */
-  auto GetRootGuardWrite(bool create_new_root = false) -> WritePageGuard;
-  auto GetRootGuardRead() -> ReadPageGuard;
+  auto GetRootGuard(bool create_new_root = false) -> BasicPageGuard;
 
   /**
    * @brief Insert the <key, value> pair into current page
@@ -99,20 +113,20 @@ class BPlusTree<KeyType, ValueType, KeyComparator, false> {
    * @return true
    * @return false
    */
-  auto InsertIntoPage(const KeyType &key, const ValueType &value, Context *ctx) -> bool;
-  auto InsertIntoLeafPage(const KeyType &key, const ValueType &value, Context *ctx) -> bool;
+  auto InsertIntoPage(const KeyType &key, const ValueType &value, BasicContext *ctx) -> bool;
+  auto InsertIntoLeafPage(const KeyType &key, const ValueType &value, BasicContext *ctx) -> bool;
   auto ShiftLeafPage(LeafPage *cur_page, InternalPage *last_page, int index) -> bool;
   auto ShiftInternalPage(InternalPage *cur_page, InternalPage *last_page, int index) -> bool;
   auto SplitLeafPage(LeafPage *cur_page, InternalPage *last_page) -> bool;
   auto SplitInternalPage(InternalPage *cur_page, InternalPage *last_page) -> bool;
 
-  auto GetValueInPage(const KeyType &key, std::vector<ValueType> *result, Context *ctx, const KeyComparator &comparator)
+  auto GetValueInPage(const KeyType &key, std::vector<ValueType> *result, BasicContext *ctx, const KeyComparator &comparator)
       -> bool;
-  auto GetValueInLeafPage(const KeyType &key, std::vector<ValueType> *result, Context *ctx,
+  auto GetValueInLeafPage(const KeyType &key, std::vector<ValueType> *result, BasicContext *ctx,
                           const KeyComparator &comparator) -> bool;
 
-  auto RemoveInPage(const KeyType &key, Context *ctx) -> std::pair<bool, KeyType>;
-  auto RemoveInLeafPage(const KeyType &key, Context *ctx) -> std::pair<bool, KeyType>;
+  auto RemoveInPage(const KeyType &key, BasicContext *ctx) -> std::pair<bool, KeyType>;
+  auto RemoveInLeafPage(const KeyType &key, BasicContext *ctx) -> std::pair<bool, KeyType>;
   auto ReplenishLeafPage(LeafPage *cur_page, InternalPage *last_page, int index) -> bool;
   auto ReplenishInternalPage(InternalPage *cur_page, InternalPage *last_page, int index) -> bool;
   auto CoalesceLeafPage(LeafPage *cur_page, InternalPage *last_page, int index) -> bool;

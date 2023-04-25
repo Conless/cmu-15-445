@@ -12,7 +12,7 @@ auto main() -> int {
   GenericComparator<8> comparator(key_schema.get());
 
   auto disk_manager = std::make_unique<DiskManagerUnlimitedMemory>();
-  auto *bpm = new BufferPoolManager(50, disk_manager.get());
+  auto *bpm = new BufferPoolManager(50, disk_manager.get(), 10, nullptr, false);
   // create and fetch header_page
   page_id_t page_id;
   auto header_page = bpm->NewPage(&page_id);
@@ -31,11 +31,11 @@ auto main() -> int {
 
   std::vector<int> vec;
   int opt = 1;
-  int n = 1e4;
+  int n = 1e5;
   for (int i = 1; i <= n; i++) {
     vec.push_back(i);
   }
-  std::shuffle(vec.begin(), vec.end(), std::mt19937(std::random_device()()));
+//   std::shuffle(vec.begin(), vec.end(), std::mt19937(std::random_device()()));
   for (auto key : vec) {
     if (opt == 2) {
       std::cin >> key;
@@ -46,7 +46,7 @@ auto main() -> int {
     tree.Insert(index_key, rid, transaction);
   }
   std::cout << "Finish insert\n";
-  std::shuffle(vec.begin(), vec.end(), std::mt19937(std::random_device()()));
+//   std::shuffle(vec.begin(), vec.end(), std::mt19937(std::random_device()()));
   for (auto key : vec) {
     if (opt == 2) {
       std::cin >> key;
