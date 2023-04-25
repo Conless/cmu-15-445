@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <random>
 #include "buffer/buffer_pool_manager.h"
+#include "common/config.h"
 #include "storage/disk/disk_manager_nts.h"
 #include "storage/index/b_plus_tree_nts.h"
 #include "storage/index/custom_key.h"
@@ -12,74 +13,49 @@ auto main() -> int {
   auto disk_manager = std::make_unique<DiskManagerNTS>("haha.db");
   auto *bpm = new BufferPoolManager(50, disk_manager.get(), 10, nullptr, false);
   // create and fetch header_page
-  page_id_t page_id;
-  auto header_page = bpm->NewPage(&page_id);
-  // create b+ tree
-  //   int leaf_max_size = 3;
-  //   int internal_max_size = 2;
-  //   std::cout << "Type in the maximum leaf page size: ";
-  //   std::cin >> leaf_max_size;
-  //   std::cout << "Type in the maximum internal page size: ";
-  //   std::cin >> internal_max_size;
-  StandardComparator<int> comp;
-  BPlusTree<StandardKey<int>, int, StandardComparator<int>, false> tree("foo_pk", header_page->GetPageId(), bpm, comp);
+  Page *header_page;
+  int header_page_id;
+//   header_page = bpm->NewPage(&header_page_id);
+  header_page = bpm->FetchPage(HEADER_PAGE_ID);
+  StringIntComparator<65> comp(ComparatorType::CompareData);
+  StringIntComparator<65> comp_key(ComparatorType::CompareKey);
+  BPlusTree<StringIntKey<65>, int, StringIntComparator<65>, false> tree("haha", header_page->GetPageId(), bpm, comp, 3, 3);
   // create transaction
   auto *transaction = new Transaction(0);
-  std::vector<int> vec;
-  int n = 1e6;
-  int opt = 1;
-  for (int i = 1; i <= n; i++) {
-    vec.push_back(i);
-  }
-//   std::shuffle(vec.begin(), vec.end(), std::mt19937(std::random_device()()));
-  for (auto key : vec) {
-    if (opt == 2) {
+  StringIntKey<65> key_value;
+  int t;
+  std::cin >> t;
+  while (t-- != 0) {
+    std::string opt;
+    std::string key;
+    int value;
+    std::cin >> opt;
+    if (opt == "insert") {
+      std::cin >> key >> value;
+      key_value = {key, value};
+      tree.Insert(key_value, value);
+    } else if (opt == "find") {
       std::cin >> key;
-    } else {
-    //   std::cout << key << " ";
+      key_value = {key, 0};
+      std::vector<int> res;
+      tree.GetValue(key_value, &res, comp_key);
+      if (res.empty()) {
+        std::cout << "null";
+      } else {
+        for (auto num : res) {
+          std::cout << num << ' ';
+        }
+      }
+      std::cout << '\n';
+    } else if (opt == "delete") {
+      std::cin >> key >> value;
+      key_value = {key, value};
+      tree.Remove(key_value);
     }
-    tree.Insert(key, key, transaction);
-    if (key % 100000 == 0) {
-      std::cout << key << '\n';
-    }
+    std::cout << tree.DrawBPlusTree();
   }
-  std::cout << "Finish insert\n";
-//   std::shuffle(vec.begin(), vec.end(), std::mt19937(std::random_device()()));
-  for (auto key : vec) {
-    if (opt == 2) {
-      std::cin >> key;
-    } else {
-    //   std::cout << key << " ";
-    }
-    tree.Remove(key, transaction);
-    if (key % 100000 == 0) {
-      std::cout << key << '\n';
-    }
-  }
-  std::cout << "Finish remove\n";
-//   std::shuffle(vec.begin(), vec.end(), std::mt19937(std::random_device()()));
-//   for (auto key : vec) {
-//     if (opt == 2) {
-//       std::cin >> key;
-//     } else {
-//     //   std::cout << key << " ";
-//     }
-//     index_key.SetFromInteger(key);
-//     tree.Insert(index_key, rid, transaction);
-//   }
-//   std::cout << "Finish insert\n";
-//   std::shuffle(vec.begin(), vec.end(), std::mt19937(std::random_device()()));
-//   for (auto key : vec) {
-//     if (opt == 2) {
-//       std::cin >> key;
-//     } else {
-//     //   std::cout << key << " ";
-//     }
-//     index_key.SetFromInteger(key);
-//     tree.Remove(index_key, transaction);
-//   }
-//   std::cout << "Finish remove\n";
   bpm->UnpinPage(HEADER_PAGE_ID, true);
+  bpm->FlushAllPages();
   delete transaction;
   delete bpm;
 }

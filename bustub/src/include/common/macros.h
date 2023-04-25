@@ -44,16 +44,19 @@ namespace bustub {
 #define BUSTUB_DECLARE(TypeName)                                                        \
   namespace bustub {                                                                    \
   template class TypeName<StandardKey<int>, int, StandardComparator<int>>; /* NOLINT */ \
+  template class TypeName<StringIntKey<65>, int, StringIntComparator<65>>; /* NOLINT */ \
   }
 
 #define BUSTUB_NTS_DECLARE(TypeName)                                                       \
   namespace bustub {                                                                       \
   template class TypeName<StandardKey<int>, int, StandardComparator<int>, false>;    /* NOLINT */ \
+  template class TypeName<StringIntKey<65>, int, StringIntComparator<65>, false>; /* NOLINT */ \
   }
 
 #define BUSTUB_INTERNAL_DECLARE(TypeName)                                                     \
   namespace bustub {                                                                          \
   template class TypeName<StandardKey<int>, page_id_t, StandardComparator<int>>; /* NOLINT */ \
+  template class TypeName<StringIntKey<65>, page_id_t, StringIntComparator<65>>; /* NOLINT */ \
   }
 
 }  // namespace bustub

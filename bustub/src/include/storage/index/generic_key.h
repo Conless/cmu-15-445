@@ -57,7 +57,7 @@ class GenericKey {
 
   // NOTE: for test purpose only
   // interpret the first 8 bytes as int64_t from data vector
-  inline auto ToString() const -> int64_t { return *reinterpret_cast<int64_t *>(const_cast<char *>(data_)); }
+  inline auto ToString() const -> std::string { return std::to_string(*reinterpret_cast<int64_t *>(const_cast<char *>(data_))); }
 
   // NOTE: for test purpose only
   // interpret the first 8 bytes as int64_t from data vector

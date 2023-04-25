@@ -114,7 +114,7 @@ auto BPLUSTREENTS_TYPE::GetValue(const KeyType &key, std::vector<ValueType> *res
   BasicContext ctx;
   BasicPageGuard root_guard = GetRootGuard();
   ctx.basic_set_.emplace_back(std::move(root_guard));
-  return GetValueInPage(key, result, &ctx, comparator_);
+  return GetValueInPage(key, result, &ctx, comparator);
 }
 
 INDEX_TEMPLATE_ARGUMENTS
@@ -122,7 +122,7 @@ auto BPLUSTREENTS_TYPE::GetValueInPage(const KeyType &key, std::vector<ValueType
                                        const KeyComparator &comparator) -> bool {
   auto cur_page = ctx->basic_set_.back().As<BPlusTreePage>();
   if (cur_page->IsLeafPage()) {
-    return GetValueInLeafPage(key, result, ctx, comparator_);
+    return GetValueInLeafPage(key, result, ctx, comparator);
   }
   auto internal_page = reinterpret_cast<const InternalPage *>(cur_page);
   int next_search_index = internal_page->GetLastIndexL(key, comparator);

@@ -40,7 +40,7 @@ class BPlusTree<KeyType, ValueType, KeyComparator, false> {
   auto Insert(const KeyType &key, const ValueType &value, Transaction *txn = nullptr) -> bool;
 
   // Remove a key and its value from this B+ tree.
-  auto Remove(const KeyType &key, Transaction *txn) -> bool;
+  auto Remove(const KeyType &key, Transaction *txn = nullptr) -> bool;
 
   // Return the value associated with a given key
   auto GetValue(const KeyType &key, std::vector<ValueType> *result, Transaction *txn = nullptr) -> bool;

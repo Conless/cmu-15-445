@@ -161,7 +161,7 @@ class BPlusTreeInternalPage : public BPlusTreePage {
         kstr.append(",");
       }
 
-      kstr.append(std::to_string(key.ToString()));
+      kstr.append(key.ToString());
     }
     kstr.append(")");
 
