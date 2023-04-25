@@ -57,26 +57,12 @@ class GenericKey {
 
   // NOTE: for test purpose only
   // interpret the first 8 bytes as int64_t from data vector
-  inline auto ToString() const -> int64_t {
-    // return std::stoi(data_);
-    return *reinterpret_cast<int64_t *>(const_cast<char *>(data_));
-  }
-
-  template <typename Type>
-  inline void ToBe(const Type &key) {
-    memset(data_, 0, KeySize);
-    memcpy(data_, &key, sizeof(Type));
-  }
-
-  template <typename Type>
-  inline void As() {
-    return *reinterpret_cast<Type *>(const_cast<char *>(data_));
-  }
+  inline auto ToString() const -> int64_t { return *reinterpret_cast<int64_t *>(const_cast<char *>(data_)); }
 
   // NOTE: for test purpose only
   // interpret the first 8 bytes as int64_t from data vector
   friend auto operator<<(std::ostream &os, const GenericKey &key) -> std::ostream & {
-    os << key.ToString();
+    os << key.data_;
     return os;
   }
 
