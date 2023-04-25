@@ -126,7 +126,7 @@ class BPlusTreeInternalPage : public BPlusTreePage {
    */
   void SetValueAt(int index, const ValueType &value);
 
-  void CopyLastward(int index);
+  void CopyBackward(int index);
 
   void CopyForward(int index);
 

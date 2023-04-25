@@ -112,7 +112,7 @@ class BPlusTreeLeafPage : public BPlusTreePage {
 
   auto RemoveData(int index) -> MappingType;
 
-  void CopyLastward(int index);
+  void CopyBackward(int index);
 
   void CopyForward(int index);
 

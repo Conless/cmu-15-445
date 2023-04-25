@@ -19,14 +19,12 @@ namespace bustub {
  */
 INDEX_TEMPLATE_ARGUMENTS
 BPLUSTREE_INDEX_TYPE::BPlusTreeIndex(std::unique_ptr<IndexMetadata> &&metadata, BufferPoolManager *buffer_pool_manager)
-    : Index(std::move(metadata)), comparator_(GetMetadata()->GetKeySchema()) {
-  page_id_t header_page_id;
-  buffer_pool_manager->NewPage(&header_page_id);
-  container_ = std::make_shared<BPlusTree<KeyType, ValueType, KeyComparator>>(GetMetadata()->GetName(), header_page_id,
-                                                                              buffer_pool_manager, comparator_);
+    : Index(std::move(metadata)) {
+  UNIMPLEMENTED("bpt index doesn't support it.");
 }
-// INDEX_TEMPLATE_ARGUMENTS
-// BPLUSTREE_INDEX_TYPE::BPlusTreeIndex();
+
+INDEX_TEMPLATE_ARGUMENTS
+BPLUSTREE_INDEX_TYPE::BPlusTreeIndex() : Index(nullptr) {}
 
 INDEX_TEMPLATE_ARGUMENTS
 auto BPLUSTREE_INDEX_TYPE::InsertEntry(const Tuple &key, RID rid, Transaction *transaction) -> bool {

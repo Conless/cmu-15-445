@@ -1,15 +1,15 @@
 #include <algorithm>
 #include <random>
 #include "buffer/buffer_pool_manager.h"
-#include "storage/disk/disk_manager_memory.h"
+#include "storage/disk/disk_manager_nts.h"
 #include "storage/index/b_plus_tree_nts.h"
 #include "storage/index/custom_key.h"
-#include "test_util.h"  // NOLINT
+// #include "test_util.h"  // NOLINT
 
 using namespace bustub;  // NOLINT
 
 auto main() -> int {
-  auto disk_manager = std::make_unique<DiskManagerUnlimitedMemory>();
+  auto disk_manager = std::make_unique<DiskManagerNTS>("haha.db");
   auto *bpm = new BufferPoolManager(50, disk_manager.get(), 10, nullptr, false);
   // create and fetch header_page
   page_id_t page_id;
@@ -26,7 +26,7 @@ auto main() -> int {
   // create transaction
   auto *transaction = new Transaction(0);
   std::vector<int> vec;
-  int n = 1e5;
+  int n = 1e6;
   int opt = 1;
   for (int i = 1; i <= n; i++) {
     vec.push_back(i);
@@ -39,22 +39,24 @@ auto main() -> int {
     //   std::cout << key << " ";
     }
     tree.Insert(key, key, transaction);
-    if (key % 10000 == 0) {
+    if (key % 100000 == 0) {
       std::cout << key << '\n';
     }
   }
   std::cout << "Finish insert\n";
 //   std::shuffle(vec.begin(), vec.end(), std::mt19937(std::random_device()()));
-//   for (auto key : vec) {
-//     if (opt == 2) {
-//       std::cin >> key;
-//     } else {
-//     //   std::cout << key << " ";
-//     }
-//     index_key.SetFromInteger(key);
-//     tree.Remove(index_key, transaction);
-//   }
-//   std::cout << "Finish remove\n";
+  for (auto key : vec) {
+    if (opt == 2) {
+      std::cin >> key;
+    } else {
+    //   std::cout << key << " ";
+    }
+    tree.Remove(key, transaction);
+    if (key % 100000 == 0) {
+      std::cout << key << '\n';
+    }
+  }
+  std::cout << "Finish remove\n";
 //   std::shuffle(vec.begin(), vec.end(), std::mt19937(std::random_device()()));
 //   for (auto key : vec) {
 //     if (opt == 2) {

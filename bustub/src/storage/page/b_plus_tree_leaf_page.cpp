@@ -14,7 +14,6 @@
 #include "common/config.h"
 #include "common/exception.h"
 #include "common/macros.h"
-#include "common/rid.h"
 #include "storage/page/b_plus_tree_internal_page.h"
 #include "storage/page/b_plus_tree_leaf_page.h"
 #include "storage/page/b_plus_tree_page.h"
@@ -161,7 +160,7 @@ void B_PLUS_TREE_LEAF_PAGE_TYPE::SetDataAt(int index, const KeyType &key, const 
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-void B_PLUS_TREE_LEAF_PAGE_TYPE::CopyLastward(int index) {
+void B_PLUS_TREE_LEAF_PAGE_TYPE::CopyBackward(int index) {
   for (int i = GetSize(); i > index; i--) {
     *(array_ + i) = *(array_ + i - 1);
   }
@@ -218,7 +217,7 @@ auto B_PLUS_TREE_LEAF_PAGE_TYPE::InsertData(const KeyType &key, const ValueType 
   if (index != -1 && comparator(KeyAt(index), key) == 0) {
     return -1;
   }
-  CopyLastward(index + 1);
+  CopyBackward(index + 1);
   IncreaseSize(1);
   SetKeyAt(index + 1, key);
   SetValueAt(index + 1, value);

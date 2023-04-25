@@ -50,8 +50,6 @@ class BPlusTreeIndex : public Index {
   auto GetEndIterator() -> INDEXITERATOR_TYPE;
 
  protected:
-  // comparator for key
-  KeyComparator comparator_;
   // container
   std::shared_ptr<BPlusTree<KeyType, ValueType, KeyComparator>> container_;
 };
