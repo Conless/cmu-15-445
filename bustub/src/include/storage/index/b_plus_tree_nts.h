@@ -16,7 +16,7 @@ class BasicContext {
   page_id_t root_page_id_{INVALID_PAGE_ID};
 
   // Store the write guards of the pages that you're modifying here.
-  std::deque<BasicPageGuard> basic_set_;
+  std::vector<BasicPageGuard> basic_set_;
 
   auto IsRootPage(page_id_t page_id) -> bool { return page_id == root_page_id_; }
 };

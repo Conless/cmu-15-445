@@ -47,16 +47,16 @@ auto main() -> int {
   }
   std::cout << "Finish insert\n";
 //   std::shuffle(vec.begin(), vec.end(), std::mt19937(std::random_device()()));
-  for (auto key : vec) {
-    if (opt == 2) {
-      std::cin >> key;
-    } else {
-    //   std::cout << key << " ";
-    }
-    index_key.SetFromInteger(key);
-    tree.Remove(index_key, transaction);
-  }
-  std::cout << "Finish remove\n";
+//   for (auto key : vec) {
+//     if (opt == 2) {
+//       std::cin >> key;
+//     } else {
+//     //   std::cout << key << " ";
+//     }
+//     index_key.SetFromInteger(key);
+//     tree.Remove(index_key, transaction);
+//   }
+//   std::cout << "Finish remove\n";
 //   std::shuffle(vec.begin(), vec.end(), std::mt19937(std::random_device()()));
 //   for (auto key : vec) {
 //     if (opt == 2) {
