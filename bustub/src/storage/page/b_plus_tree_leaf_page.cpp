@@ -243,9 +243,19 @@ auto B_PLUS_TREE_LEAF_PAGE_TYPE::RemoveData(int index) -> MappingType {
   return data;
 }
 
-template class BPlusTreeLeafPage<GenericKey<4>, RID, GenericComparator<4>>;
-template class BPlusTreeLeafPage<GenericKey<8>, RID, GenericComparator<8>>;
-template class BPlusTreeLeafPage<GenericKey<16>, RID, GenericComparator<16>>;
-template class BPlusTreeLeafPage<GenericKey<32>, RID, GenericComparator<32>>;
-template class BPlusTreeLeafPage<GenericKey<64>, RID, GenericComparator<64>>;
 }  // namespace bustub
+
+#ifdef CUSTOMIZED_BUSTUB
+#include "storage/index/custom_key.h"
+BUSTUB_DECLARE(BPlusTreeLeafPage)
+#else
+#define BUSTUB_DECLARE(TypeName)
+namespace bustub { \
+  template class TypeName<GenericKey<4>, RID, GenericComparator<4>>;   /* NOLINT */ \
+  template class TypeName<GenericKey<8>, RID, GenericComparator<8>>;   /* NOLINT */ \
+  template class TypeName<GenericKey<16>, RID, GenericComparator<16>>; /* NOLINT */ \
+  template class TypeName<GenericKey<32>, RID, GenericComparator<32>>; /* NOLINT */ \
+  template class TypeName<GenericKey<64>, RID, GenericComparator<64>>; /* NOLINT */ \
+}
+BUSTUB_DECLARE(BPlusTreeLeafPage)
+#endif

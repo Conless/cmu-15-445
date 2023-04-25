@@ -10,6 +10,8 @@
 //===----------------------------------------------------------------------===//
 
 #include "storage/index/b_plus_tree_index.h"
+#include "common/macros.h"
+#include "storage/page/b_plus_tree_page.h"
 
 namespace bustub {
 /*
@@ -23,32 +25,34 @@ BPLUSTREE_INDEX_TYPE::BPlusTreeIndex(std::unique_ptr<IndexMetadata> &&metadata, 
   container_ = std::make_shared<BPlusTree<KeyType, ValueType, KeyComparator>>(GetMetadata()->GetName(), header_page_id,
                                                                               buffer_pool_manager, comparator_);
 }
+// INDEX_TEMPLATE_ARGUMENTS
+// BPLUSTREE_INDEX_TYPE::BPlusTreeIndex();
 
 INDEX_TEMPLATE_ARGUMENTS
 auto BPLUSTREE_INDEX_TYPE::InsertEntry(const Tuple &key, RID rid, Transaction *transaction) -> bool {
-  // construct insert index key
-  KeyType index_key;
-  index_key.SetFromKey(key);
+  UNIMPLEMENTED("bpt index doesn't support it.");
+}
 
-  return container_->Insert(index_key, rid, transaction);
+INDEX_TEMPLATE_ARGUMENTS
+auto BPLUSTREE_INDEX_TYPE::Insert(const KeyType &key, const ValueType &rid, Transaction *transaction) -> bool {
+  return false;
 }
 
 INDEX_TEMPLATE_ARGUMENTS
 void BPLUSTREE_INDEX_TYPE::DeleteEntry(const Tuple &key, RID rid, Transaction *transaction) {
-  // construct delete index key
-  KeyType index_key;
-  index_key.SetFromKey(key);
-
-  container_->Remove(index_key, transaction);
+  UNIMPLEMENTED("bpt index doesn't support it.");
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-void BPLUSTREE_INDEX_TYPE::ScanKey(const Tuple &key, std::vector<RID> *result, Transaction *transaction) {
-  // construct scan index key
-  KeyType index_key;
-  index_key.SetFromKey(key);
+void BPLUSTREE_INDEX_TYPE::Delete(const KeyType &key, Transaction *transaction) {}
 
-  container_->GetValue(index_key, result, transaction);
+INDEX_TEMPLATE_ARGUMENTS
+void BPLUSTREE_INDEX_TYPE::ScanKey(const Tuple &key, std::vector<RID> *result, Transaction *transaction) {
+  UNIMPLEMENTED("bpt index doesn't support it.");
+}
+
+INDEX_TEMPLATE_ARGUMENTS
+void BPLUSTREE_INDEX_TYPE::Search(const KeyType &key, std::vector<ValueType> *result, Transaction *transaction) {
 }
 
 INDEX_TEMPLATE_ARGUMENTS
@@ -60,10 +64,19 @@ auto BPLUSTREE_INDEX_TYPE::GetBeginIterator(const KeyType &key) -> INDEXITERATOR
 INDEX_TEMPLATE_ARGUMENTS
 auto BPLUSTREE_INDEX_TYPE::GetEndIterator() -> INDEXITERATOR_TYPE { return container_->End(); }
 
-template class BPlusTreeIndex<GenericKey<4>, RID, GenericComparator<4>>;
-template class BPlusTreeIndex<GenericKey<8>, RID, GenericComparator<8>>;
-template class BPlusTreeIndex<GenericKey<16>, RID, GenericComparator<16>>;
-template class BPlusTreeIndex<GenericKey<32>, RID, GenericComparator<32>>;
-template class BPlusTreeIndex<GenericKey<64>, RID, GenericComparator<64>>;
-
 }  // namespace bustub
+
+#ifdef CUSTOMIZED_BUSTUB
+#include "storage/index/custom_key.h"
+BUSTUB_DECLARE(BPlusTreeIndex)
+#else
+#define BUSTUB_DECLARE(TypeName)
+namespace bustub { \
+  template class TypeName<GenericKey<4>, RID, GenericComparator<4>>;   /* NOLINT */ \
+  template class TypeName<GenericKey<8>, RID, GenericComparator<8>>;   /* NOLINT */ \
+  template class TypeName<GenericKey<16>, RID, GenericComparator<16>>; /* NOLINT */ \
+  template class TypeName<GenericKey<32>, RID, GenericComparator<32>>; /* NOLINT */ \
+  template class TypeName<GenericKey<64>, RID, GenericComparator<64>>; /* NOLINT */ \
+}
+BUSTUB_DECLARE(BPlusTreeIndex)
+#endif

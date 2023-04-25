@@ -77,12 +77,6 @@ class BPlusTree<KeyType, ValueType, KeyComparator, false> {
    */
   auto DrawBPlusTree() -> std::string;
 
-  // read data from file and insert one by one
-  void InsertFromFile(const std::string &file_name, Transaction *txn = nullptr);
-
-  // read data from file and remove one by one
-  void RemoveFromFile(const std::string &file_name, Transaction *txn = nullptr);
-
  protected:
   void SetNewRoot(page_id_t new_root_id);
   void SetNewRoot(page_id_t new_root_id, BPlusTreeHeaderPage *header_page);

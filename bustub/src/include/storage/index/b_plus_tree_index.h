@@ -27,6 +27,8 @@ namespace bustub {
 INDEX_TEMPLATE_ARGUMENTS
 class BPlusTreeIndex : public Index {
  public:
+  BPlusTreeIndex();
+
   BPlusTreeIndex(std::unique_ptr<IndexMetadata> &&metadata, BufferPoolManager *buffer_pool_manager);
 
   auto InsertEntry(const Tuple &key, RID rid, Transaction *transaction) -> bool override;
@@ -34,6 +36,12 @@ class BPlusTreeIndex : public Index {
   void DeleteEntry(const Tuple &key, RID rid, Transaction *transaction) override;
 
   void ScanKey(const Tuple &key, std::vector<RID> *result, Transaction *transaction) override;
+
+  auto Insert(const KeyType &key, const ValueType &rid, Transaction * = nullptr) -> bool;
+
+  void Delete(const KeyType &key, Transaction *transaction = nullptr);
+
+  void Search(const KeyType &key, std::vector<ValueType> *result, Transaction *transaction = nullptr);
 
   auto GetBeginIterator() -> INDEXITERATOR_TYPE;
 

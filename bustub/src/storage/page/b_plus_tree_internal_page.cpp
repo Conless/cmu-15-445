@@ -251,10 +251,20 @@ auto B_PLUS_TREE_INTERNAL_PAGE_TYPE::RemoveData(int index) -> MappingType {
   return data;
 }
 
-// valuetype for internalNode should be page id_t
-template class BPlusTreeInternalPage<GenericKey<4>, page_id_t, GenericComparator<4>>;
-template class BPlusTreeInternalPage<GenericKey<8>, page_id_t, GenericComparator<8>>;
-template class BPlusTreeInternalPage<GenericKey<16>, page_id_t, GenericComparator<16>>;
-template class BPlusTreeInternalPage<GenericKey<32>, page_id_t, GenericComparator<32>>;
-template class BPlusTreeInternalPage<GenericKey<64>, page_id_t, GenericComparator<64>>;
 }  // namespace bustub
+
+#ifdef CUSTOMIZED_BUSTUB
+#include "storage/index/custom_key.h"
+BUSTUB_INTERNAL_DECLARE(BPlusTreeInternalPage)
+#else
+#define BUSTUB_INTERNAL_DECLARE(TypeName)
+namespace bustub { \
+  template class TypeName<GenericKey<4>, page_id_t, GenericComparator<4>>;   /* NOLINT */ \
+  template class TypeName<GenericKey<8>, page_id_t, GenericComparator<8>>;   /* NOLINT */ \
+  template class TypeName<GenericKey<16>, page_id_t, GenericComparator<16>>; /* NOLINT */ \
+  template class TypeName<GenericKey<32>, page_id_t, GenericComparator<32>>; /* NOLINT */ \
+  template class TypeName<GenericKey<64>, page_id_t, GenericComparator<64>>; /* NOLINT */ \
+}
+BUSTUB_DECLARE(BPlusTreeInternalPage)
+#endif
+

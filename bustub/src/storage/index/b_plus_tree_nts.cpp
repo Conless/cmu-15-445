@@ -17,7 +17,7 @@ namespace bustub {
 
 INDEX_TEMPLATE_ARGUMENTS
 BPLUSTREENTS_TYPE::BPlusTree(std::string name, page_id_t header_page_id, BufferPoolManager *buffer_pool_manager,
-                          const KeyComparator &comparator, int leaf_max_size, int internal_max_size)
+                             const KeyComparator &comparator, int leaf_max_size, int internal_max_size)
     : index_name_(std::move(name)),
       bpm_(buffer_pool_manager),
       comparator_(std::move(comparator)),
@@ -108,7 +108,7 @@ auto BPLUSTREENTS_TYPE::GetValue(const KeyType &key, std::vector<ValueType> *res
 
 INDEX_TEMPLATE_ARGUMENTS
 auto BPLUSTREENTS_TYPE::GetValue(const KeyType &key, std::vector<ValueType> *result, const KeyComparator &comparator,
-                              Transaction *txn) -> bool {
+                                 Transaction *txn) -> bool {
   // Declaration of context instance.
   BUSTUB_ENSURE(result->empty(), "The result array should be empty.");
   BasicContext ctx;
@@ -119,7 +119,7 @@ auto BPLUSTREENTS_TYPE::GetValue(const KeyType &key, std::vector<ValueType> *res
 
 INDEX_TEMPLATE_ARGUMENTS
 auto BPLUSTREENTS_TYPE::GetValueInPage(const KeyType &key, std::vector<ValueType> *result, BasicContext *ctx,
-                                    const KeyComparator &comparator) -> bool {
+                                       const KeyComparator &comparator) -> bool {
   auto cur_page = ctx->basic_set_.back().As<BPlusTreePage>();
   if (cur_page->IsLeafPage()) {
     return GetValueInLeafPage(key, result, ctx, comparator_);
@@ -136,7 +136,7 @@ auto BPLUSTREENTS_TYPE::GetValueInPage(const KeyType &key, std::vector<ValueType
 
 INDEX_TEMPLATE_ARGUMENTS
 auto BPLUSTREENTS_TYPE::GetValueInLeafPage(const KeyType &key, std::vector<ValueType> *result, BasicContext *ctx,
-                                        const KeyComparator &comparator) -> bool {
+                                           const KeyComparator &comparator) -> bool {
   auto leaf_page = ctx->basic_set_.back().As<LeafPage>();
   int index = leaf_page->GetLastIndexL(key, comparator) + 1;
   int size = leaf_page->GetSize();
@@ -609,38 +609,6 @@ auto BPLUSTREENTS_TYPE::GetRootPageId() -> page_id_t {
  * UTILITIES AND DEBUG
  *****************************************************************************/
 
-/*
- * This method is used for test only
- * Read data from file and insert one by one
- */
-INDEX_TEMPLATE_ARGUMENTS
-void BPLUSTREENTS_TYPE::InsertFromFile(const std::string &file_name, Transaction *txn) {
-  int64_t key;
-  std::ifstream input(file_name);
-  while (input) {
-    input >> key;
-    KeyType index_key;
-    index_key.SetFromInteger(key);
-    RID rid(key);
-    Insert(index_key, rid, txn);
-  }
-}
-/*
- * This method is used for test only
- * Read data from file and remove one by one
- */
-INDEX_TEMPLATE_ARGUMENTS
-void BPLUSTREENTS_TYPE::RemoveFromFile(const std::string &file_name, Transaction *txn) {
-  int64_t key;
-  std::ifstream input(file_name);
-  while (input) {
-    input >> key;
-    KeyType index_key;
-    index_key.SetFromInteger(key);
-    Remove(index_key, txn);
-  }
-}
-
 INDEX_TEMPLATE_ARGUMENTS
 void BPLUSTREENTS_TYPE::Print(BufferPoolManager *bpm) {
   auto root_page_id = GetRootPageId();
@@ -827,14 +795,19 @@ auto BPLUSTREENTS_TYPE::ToPrintableBPlusTree(page_id_t root_id) -> PrintableBPlu
   return proot;
 }
 
-template class BPlusTree<GenericKey<4>, RID, GenericComparator<4>, false>;
-
-template class BPlusTree<GenericKey<8>, RID, GenericComparator<8>, false>;
-
-template class BPlusTree<GenericKey<16>, RID, GenericComparator<16>, false>;
-
-template class BPlusTree<GenericKey<32>, RID, GenericComparator<32>, false>;
-
-template class BPlusTree<GenericKey<64>, RID, GenericComparator<64>, false>;
-
 }  // namespace bustub
+
+#ifdef CUSTOMIZED_BUSTUB
+#include "storage/index/custom_key.h"
+BUSTUB_NTS_DECLARE(BPlusTree)
+#else
+#define BUSTUB_NTS_DECLARE(TypeName)                                                       \
+  namespace bustub {                                                                       \
+  template class TypeName<GenericKey<4>, RID, GenericComparator<4>, false>;   /* NOLINT */ \
+  template class TypeName<GenericKey<8>, RID, GenericComparator<8>, false>;   /* NOLINT */ \
+  template class TypeName<GenericKey<16>, RID, GenericComparator<16>, false>; /* NOLINT */ \
+  template class TypeName<GenericKey<32>, RID, GenericComparator<32>, false>; /* NOLINT */ \
+  template class TypeName<GenericKey<64>, RID, GenericComparator<64>, false>; /* NOLINT */ \
+  }                                                                           // namespace bustub
+BUSTUB_NTS_DECLARE(BPlusTree)
+#endif

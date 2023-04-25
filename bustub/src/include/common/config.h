@@ -18,6 +18,8 @@
 
 namespace bustub {
 
+#define CUSTOMIZED_BUSTUB
+
 /** Cycle detection is performed every CYCLE_DETECTION_INTERVAL milliseconds. */
 extern std::chrono::milliseconds cycle_detection_interval;
 

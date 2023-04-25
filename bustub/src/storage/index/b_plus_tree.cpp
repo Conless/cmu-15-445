@@ -629,7 +629,7 @@ void BPLUSTREE_TYPE::InsertFromFile(const std::string &file_name, Transaction *t
     KeyType index_key;
     index_key.SetFromInteger(key);
     RID rid(key);
-    Insert(index_key, rid, txn);
+    Insert(index_key, *reinterpret_cast<ValueType *>(&rid), txn);
   }
 }
 /*
@@ -834,14 +834,20 @@ auto BPLUSTREE_TYPE::ToPrintableBPlusTree(page_id_t root_id) -> PrintableBPlusTr
   return proot;
 }
 
-template class BPlusTree<GenericKey<4>, RID, GenericComparator<4>>;
-
-template class BPlusTree<GenericKey<8>, RID, GenericComparator<8>>;
-
-template class BPlusTree<GenericKey<16>, RID, GenericComparator<16>>;
-
-template class BPlusTree<GenericKey<32>, RID, GenericComparator<32>>;
-
-template class BPlusTree<GenericKey<64>, RID, GenericComparator<64>>;
-
 }  // namespace bustub
+
+#ifdef CUSTOMIZED_BUSTUB
+#include "storage/index/custom_key.h"
+BUSTUB_DECLARE(BPlusTree)
+#else
+#define BUSTUB_DECLARE(TypeName)
+namespace bustub { \
+  template class TypeName<GenericKey<4>, RID, GenericComparator<4>>;   /* NOLINT */ \
+  template class TypeName<GenericKey<8>, RID, GenericComparator<8>>;   /* NOLINT */ \
+  template class TypeName<GenericKey<16>, RID, GenericComparator<16>>; /* NOLINT */ \
+  template class TypeName<GenericKey<32>, RID, GenericComparator<32>>; /* NOLINT */ \
+  template class TypeName<GenericKey<64>, RID, GenericComparator<64>>; /* NOLINT */ \
+}
+BUSTUB_DECLARE(BPlusTree)
+#endif
+
