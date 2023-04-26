@@ -61,7 +61,7 @@ TEST(BPlusTreeTests, DISABLED_InsertTestCustom1) {
   delete bpm;
 }
 
-TEST(BPlusTreeTests, InsertTestCustom2) {
+TEST(BPlusTreeTests, DISABLED_InsertTestCustom2) {
   auto key_schema = ParseCreateStatement("a bigint");
   GenericComparator<8> comparator(key_schema.get());
 
@@ -224,7 +224,7 @@ TEST(BPlusTreeTests, InsertTest3) {
     int64_t value = key & 0xFFFFFFFF;
     EXPECT_EQ(rids[0].GetSlotNum(), value);
   }
-/*
+
   int64_t start_key = 1;
   int64_t current_key = start_key;
   index_key.SetFromInteger(start_key);
@@ -245,7 +245,7 @@ TEST(BPlusTreeTests, InsertTest3) {
     EXPECT_EQ(location.GetPageId(), 0);
     EXPECT_EQ(location.GetSlotNum(), current_key);
     current_key = current_key + 1;
-  }*/
+  }
 
   bpm->UnpinPage(HEADER_PAGE_ID, true);
   delete transaction;

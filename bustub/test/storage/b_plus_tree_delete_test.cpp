@@ -51,7 +51,6 @@ TEST(BPlusTreeTests, DeleteTestCustom1) {
     tree.Insert(index_key, rid, transaction);
   }
 
-
   std::vector<RID> rids;
   for (auto key : keys) {
     rids.clear();
