@@ -30,7 +30,7 @@ static char *buffer_used;
  * Constructor: open/create a single database file & log file
  * @input db_file: database file name
  */
-DiskManager::DiskManager(const std::string &db_file) : file_name_(db_file) {
+DiskManager::DiskManager(const std::string &db_file, bool is_thread_safe) : file_name_(db_file), is_thread_safe_(is_thread_safe) {
   std::string::size_type n = file_name_.rfind('.');
   if (n == std::string::npos) {
     LOG_DEBUG("wrong file format");
@@ -49,7 +49,8 @@ DiskManager::DiskManager(const std::string &db_file) : file_name_(db_file) {
     }
   }
 
-  std::scoped_lock scoped_db_io_latch(db_io_latch_);
+  std::unique_lock<std::mutex> lock =
+      is_thread_safe_ ? std::unique_lock<std::mutex>(db_io_latch_) : std::unique_lock<std::mutex>();
   db_io_.open(db_file, std::ios::binary | std::ios::in | std::ios::out);
   // directory or file does not exist
   if (!db_io_.is_open()) {
@@ -78,7 +79,8 @@ void DiskManager::ShutDown() {
  * Write the contents of the specified page into disk file
  */
 void DiskManager::WritePage(page_id_t page_id, const char *page_data) {
-  std::scoped_lock scoped_db_io_latch(db_io_latch_);
+  std::unique_lock<std::mutex> lock =
+      is_thread_safe_ ? std::unique_lock<std::mutex>(db_io_latch_) : std::unique_lock<std::mutex>();
   size_t offset = static_cast<size_t>(page_id) * BUSTUB_PAGE_SIZE;
   // set write cursor to offset
   num_writes_ += 1;
@@ -97,7 +99,8 @@ void DiskManager::WritePage(page_id_t page_id, const char *page_data) {
  * Read the contents of the specified page into the given memory area
  */
 void DiskManager::ReadPage(page_id_t page_id, char *page_data) {
-  std::scoped_lock scoped_db_io_latch(db_io_latch_);
+  std::unique_lock<std::mutex> lock =
+      is_thread_safe_ ? std::unique_lock<std::mutex>(db_io_latch_) : std::unique_lock<std::mutex>();
   int offset = page_id * BUSTUB_PAGE_SIZE;
   // check if read beyond file length
   if (offset > GetFileSize(file_name_)) {

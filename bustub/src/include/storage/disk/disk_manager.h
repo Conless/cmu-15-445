@@ -32,7 +32,7 @@ class DiskManager {
    * Creates a new disk manager that writes to the specified database file.
    * @param db_file the file name of the database file to write to
    */
-  explicit DiskManager(const std::string &db_file);
+  explicit DiskManager(const std::string &db_file, bool is_thread_safe = true);
 
   /** FOR TEST / LEADERBOARD ONLY, used by DiskManagerMemory */
   DiskManager() = default;
@@ -63,7 +63,7 @@ class DiskManager {
    * @param log_data raw log data
    * @param size size of log entry
    */
-  void WriteLog(char *log_data, int size);
+  virtual void WriteLog(char *log_data, int size);
 
   /**
    * Read a log entry from the log file.
@@ -72,7 +72,7 @@ class DiskManager {
    * @param offset offset of the log entry in the file
    * @return true if the read was successful, false otherwise
    */
-  auto ReadLog(char *log_data, int size, int offset) -> bool;
+  virtual auto ReadLog(char *log_data, int size, int offset) -> bool;
 
   /** @return the number of disk flushes */
   auto GetNumFlushes() const -> int;
@@ -106,6 +106,7 @@ class DiskManager {
   std::future<void> *flush_log_f_{nullptr};
   // With multiple buffer pool instances, need to protect file access
   std::mutex db_io_latch_;
+  bool is_thread_safe_;
 };
 
 }  // namespace bustub
