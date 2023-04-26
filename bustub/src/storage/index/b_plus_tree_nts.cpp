@@ -482,6 +482,7 @@ auto BPLUSTREE_NTS_TYPE::CoalesceLeafPage(LeafPage *cur_page, InternalPage *last
     if (size_sum <= leaf_max_size_) {
       next_leaf_page->CopyFirstNTo(next_leaf_page->GetSize(), cur_page);
       last_page->RemoveData(index + 1);
+      cur_page->SetNextPageId(next_leaf_page->GetNextPageId());
       //   bpm_->DeletePage(next_leaf_id);
       coalesced = true;
     }
@@ -494,6 +495,7 @@ auto BPLUSTREE_NTS_TYPE::CoalesceLeafPage(LeafPage *cur_page, InternalPage *last
     if (size_sum <= leaf_max_size_) {
       cur_page->CopyFirstNTo(cur_page->GetSize(), last_leaf_page);
       last_page->RemoveData(index);
+      last_leaf_page->SetNextPageId(cur_page->GetNextPageId());
       //   bpm_->DeletePage(cur_page->);
       coalesced = true;
     }

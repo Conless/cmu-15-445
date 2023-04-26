@@ -52,6 +52,9 @@ class BufferPoolManager {
   /** @brief Return the pointer to all the pages in the buffer pool. */
   auto GetPages() -> Page * { return pages_; }
 
+  auto GetNextPageId() const -> page_id_t { return next_page_id_; }
+  void SetNextPageId(page_id_t next_page_id) { next_page_id_ = next_page_id; }
+
   /**
    * TODO(P1): Add implementation
    *

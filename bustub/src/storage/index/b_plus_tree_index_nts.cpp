@@ -33,6 +33,10 @@ BPLUSTREE_INDEX_NTS_TYPE::BPlusTreeIndex(const std::string &file_name, const Key
     auto header_page_guard = bpm_->FetchPageBasic(HEADER_PAGE_ID);
     auto header_page = header_page_guard.AsMut<BPlusTreeHeaderPage>();
     header_page->root_page_id_ = INVALID_PAGE_ID;
+  } else {
+    page_id_t next_page_id;
+    disk_manager_->ReadLog(reinterpret_cast<char *>(&next_page_id), sizeof(page_id_t), 0);
+    bpm_->SetNextPageId(next_page_id);
   }
   container_ =
       std::make_shared<BPLUSTREE_NTS_TYPE>("index", HEADER_PAGE_ID, bpm_, comparator, leaf_max_size, internal_max_size);
@@ -42,6 +46,8 @@ INDEX_TEMPLATE_ARGUMENTS
 BPLUSTREE_INDEX_NTS_TYPE::~BPlusTreeIndex() {
   auto header_page = bpm_->FetchPageBasic(HEADER_PAGE_ID).As<BPlusTreeHeaderPage>();
   bpm_->FlushAllPages();
+  page_id_t next_page_id = bpm_->GetNextPageId();
+  disk_manager_->WriteLog(reinterpret_cast<char *>(&next_page_id), sizeof(page_id_t));
   delete bpm_;
 }
 
