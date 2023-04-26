@@ -14,7 +14,8 @@ namespace bustub {
  * Constructor
  */
 INDEX_TEMPLATE_ARGUMENTS
-BPLUSTREE_INDEX_NTS_TYPE::BPlusTreeIndex(std::unique_ptr<IndexMetadata> &&metadata, BufferPoolManager *buffer_pool_manager)
+BPLUSTREE_INDEX_NTS_TYPE::BPlusTreeIndex(std::unique_ptr<IndexMetadata> &&metadata,
+                                         BufferPoolManager *buffer_pool_manager)
     : Index(std::move(metadata)) {
   UNIMPLEMENTED("bpt index doesn't support it.");
 }
@@ -25,18 +26,16 @@ BPLUSTREE_INDEX_NTS_TYPE::BPlusTreeIndex(const std::string &file_name, const Key
     : Index(nullptr) {
   disk_manager_ = new DiskManager(file_name + ".db", false);
   bpm_ = new BufferPoolManager(buffer_pool_size, disk_manager_, replacer_k, nullptr, false);
-  int opt = 1;
-//   std::cin >> opt;
-  if (opt == 1) {
+  bool file_exist_opt = disk_manager_->Initialized();
+  if (!file_exist_opt) {
     int header_page_id;
     bpm_->NewPage(&header_page_id);
-  }
-  auto header_page_guard = bpm_->FetchPageBasic(HEADER_PAGE_ID);
-  auto header_page = header_page_guard.AsMut<BPlusTreeHeaderPage>();
-  if (opt == 1) {
+    auto header_page_guard = bpm_->FetchPageBasic(HEADER_PAGE_ID);
+    auto header_page = header_page_guard.AsMut<BPlusTreeHeaderPage>();
     header_page->root_page_id_ = INVALID_PAGE_ID;
   }
-  container_ = std::make_shared<BPLUSTREE_NTS_TYPE>("index", HEADER_PAGE_ID, bpm_, comparator, leaf_max_size, internal_max_size);
+  container_ =
+      std::make_shared<BPLUSTREE_NTS_TYPE>("index", HEADER_PAGE_ID, bpm_, comparator, leaf_max_size, internal_max_size);
 }
 
 INDEX_TEMPLATE_ARGUMENTS
@@ -77,7 +76,8 @@ void BPLUSTREE_INDEX_NTS_TYPE::Search(const KeyType &key, std::vector<ValueType>
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-void BPLUSTREE_INDEX_NTS_TYPE::Search(const KeyType &key, std::vector<ValueType> *result, const KeyComparator &comparator, Transaction *transaction) {
+void BPLUSTREE_INDEX_NTS_TYPE::Search(const KeyType &key, std::vector<ValueType> *result,
+                                      const KeyComparator &comparator, Transaction *transaction) {
   container_->GetValue(key, result, comparator, transaction);
 }
 
@@ -85,25 +85,26 @@ INDEX_TEMPLATE_ARGUMENTS
 auto BPLUSTREE_INDEX_NTS_TYPE::GetBeginIterator() -> INDEXITERATOR_TYPE { return container_->Begin(); }
 
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREE_INDEX_NTS_TYPE::GetBeginIterator(const KeyType &key) -> INDEXITERATOR_TYPE { return container_->Begin(key); }
+auto BPLUSTREE_INDEX_NTS_TYPE::GetBeginIterator(const KeyType &key) -> INDEXITERATOR_TYPE {
+  return container_->Begin(key);
+}
 
 INDEX_TEMPLATE_ARGUMENTS
 auto BPLUSTREE_INDEX_NTS_TYPE::GetEndIterator() -> INDEXITERATOR_TYPE { return container_->End(); }
 
 }  // namespace bustub
 
-
 #ifdef CUSTOMIZED_BUSTUB
 #include "storage/index/custom_key.h"
 BUSTUB_NTS_DECLARE(BPlusTreeIndex)
 #else
 #define BUSTUB_DECLARE(TypeName)
-namespace bustub { \
-  template class TypeName<GenericKey<4>, RID, GenericComparator<4>>;   /* NOLINT */ \
-  template class TypeName<GenericKey<8>, RID, GenericComparator<8>>;   /* NOLINT */ \
-  template class TypeName<GenericKey<16>, RID, GenericComparator<16>>; /* NOLINT */ \
-  template class TypeName<GenericKey<32>, RID, GenericComparator<32>>; /* NOLINT */ \
-  template class TypeName<GenericKey<64>, RID, GenericComparator<64>>; /* NOLINT */ \
-}
+namespace bustub {
+template class TypeName<GenericKey<4>, RID, GenericComparator<4> >;   /* NOLINT */
+template class TypeName<GenericKey<8>, RID, GenericComparator<8> >;   /* NOLINT */
+template class TypeName<GenericKey<16>, RID, GenericComparator<16> >; /* NOLINT */
+template class TypeName<GenericKey<32>, RID, GenericComparator<32> >; /* NOLINT */
+template class TypeName<GenericKey<64>, RID, GenericComparator<64> >; /* NOLINT */
+}  // namespace bustub
 BUSTUB_DECLARE(BPlusTreeIndex)
 #endif

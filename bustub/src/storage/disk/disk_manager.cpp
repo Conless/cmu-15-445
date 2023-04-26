@@ -55,6 +55,7 @@ DiskManager::DiskManager(const std::string &db_file, bool is_thread_safe) : file
   // directory or file does not exist
   if (!db_io_.is_open()) {
     db_io_.clear();
+    initialized_ = false;
     // create a new file
     db_io_.open(db_file, std::ios::binary | std::ios::trunc | std::ios::out | std::ios::in);
     if (!db_io_.is_open()) {

@@ -92,6 +92,8 @@ class DiskManager {
   /** Checks if the non-blocking flush future was set. */
   inline auto HasFlushLogFuture() -> bool { return flush_log_f_ != nullptr; }
 
+  auto Initialized() -> bool { return initialized_; }
+
  protected:
   auto GetFileSize(const std::string &file_name) -> int;
   // stream to write log file
@@ -107,6 +109,7 @@ class DiskManager {
   // With multiple buffer pool instances, need to protect file access
   std::mutex db_io_latch_;
   bool is_thread_safe_;
+  bool initialized_{true};
 };
 
 }  // namespace bustub
