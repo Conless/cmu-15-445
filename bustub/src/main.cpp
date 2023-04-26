@@ -10,7 +10,7 @@ using namespace bustub;  // NOLINT
 auto main() -> int {
   StringIntComparator<65> comp(ComparatorType::CompareData);
   StringIntComparator<65> comp_key(ComparatorType::CompareKey);
-  BPlusTreeIndex<StringIntKey<65>, int, StringIntComparator<65>, false> tree("haha", comp, 3, 3);
+  BPlusTreeIndex<StringIntKey<65>, int, StringIntComparator<65>, false> tree("haha", comp);
   StringIntKey<65> key_value;
   int t;
   std::cin >> t;
@@ -41,7 +41,7 @@ auto main() -> int {
       key_value = {key, value};
       tree.Delete(key_value);
     }
-    std::cout << tree.container_->DrawBPlusTree();
+    // std::cout << tree.container_->DrawBPlusTree();
   }
   return 0;
 }

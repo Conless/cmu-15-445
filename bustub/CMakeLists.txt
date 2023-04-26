@@ -10,10 +10,8 @@ set(CMAKE_CXX_FLAGS "-pthread -O0 -g")
 
 set(SOURCE_CPPS
     src/storage/disk/disk_manager.cpp
-
     src/buffer/lru_k_replacer.cpp
     src/buffer/buffer_pool_manager.cpp
-
     src/storage/page/page_guard.cpp
     src/storage/page/b_plus_tree_page.cpp
     src/storage/page/b_plus_tree_internal_page.cpp

@@ -1,11 +1,12 @@
 #pragma once
 
 #include "buffer/buffer_pool_manager.h"
-#include "storage/disk/disk_manager_nts.h"
+#include "storage/disk/disk_manager.h"
 #include "storage/index/b_plus_tree_index.h"
 #include "storage/index/b_plus_tree_nts.h"
 #include "storage/page/b_plus_tree_header_page.h"
 #include "storage/page/b_plus_tree_page.h"
+#include "storage/page/page_guard.h"
 
 #define BPLUSTREE_INDEX_NTS_TYPE BPlusTreeIndex<KeyType, ValueType, KeyComparator, false>
 
@@ -41,9 +42,8 @@ class BPlusTreeIndex<KeyType, ValueType, KeyComparator, false> : public Index {
   auto GetEndIterator() -> INDEXITERATOR_TYPE;
 
  public:
-  DiskManagerNTS *disk_manager_;
+  DiskManager *disk_manager_;
   BufferPoolManager *bpm_;
-  page_id_t header_page_id_;
   std::shared_ptr<BPlusTree<KeyType, ValueType, KeyComparator, false>> container_;
 };
 
