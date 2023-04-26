@@ -25,8 +25,8 @@ BPLUSTREE_INDEX_NTS_TYPE::BPlusTreeIndex(const std::string &file_name, const Key
     : Index(nullptr) {
   disk_manager_ = new DiskManager(file_name + ".db", false);
   bpm_ = new BufferPoolManager(buffer_pool_size, disk_manager_, replacer_k, nullptr, false);
-  int opt;
-  std::cin >> opt;
+  int opt = 1;
+//   std::cin >> opt;
   if (opt == 1) {
     int header_page_id;
     bpm_->NewPage(&header_page_id);
