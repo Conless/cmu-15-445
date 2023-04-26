@@ -110,6 +110,9 @@ auto BPLUSTREE_NTS_TYPE::GetValue(const KeyType &key, std::vector<ValueType> *re
   BUSTUB_ENSURE(result->empty(), "The result array should be empty.");
   BasicContext ctx;
   BasicPageGuard root_guard = GetRootGuard();
+  if (!root_guard.Exist()) {
+    return false;
+  }
   ctx.basic_set_.emplace_back(std::move(root_guard));
   return GetValueInPage(key, result, &ctx, comparator);
 }
@@ -332,6 +335,9 @@ auto BPLUSTREE_NTS_TYPE::Remove(const KeyType &key, Transaction *txn) -> bool {
   // Declaration of context instance.
   BasicContext ctx;
   BasicPageGuard root_guard = GetRootGuard();
+  if (!root_guard.Exist()) {
+    return false;
+  }
   ctx.basic_set_.emplace_back(std::move(root_guard));
   auto res = RemoveInPage(key, &ctx);
   if (res.first) {
