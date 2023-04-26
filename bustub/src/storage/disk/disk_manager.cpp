@@ -38,7 +38,7 @@ DiskManager::DiskManager(const std::string &db_file, bool is_thread_safe) : file
   }
   log_name_ = file_name_.substr(0, n) + ".log";
 
-  log_io_.open(log_name_, std::ios::binary | std::ios::in | std::ios::app | std::ios::out);
+  log_io_.open(log_name_, std::ios::binary | std::ios::in | std::ios::out);
   // directory or file does not exist
   if (!log_io_.is_open()) {
     log_io_.clear();
@@ -126,6 +126,11 @@ void DiskManager::ReadPage(page_id_t page_id, char *page_data) {
   }
 }
 
+
+void DiskManager::FlushLog() {
+  log_io_.seekp(0);
+}
+
 /**
  * Write the contents of the log into disk file
  * Only return when sync is done, and only perform sequence write
@@ -171,7 +176,7 @@ auto DiskManager::ReadLog(char *log_data, int size, int offset) -> bool {
     // LOG_DEBUG("file size is %d", GetFileSize(log_name_));
     return false;
   }
-  log_io_.seekp(offset);
+  log_io_.seekg(offset);
   log_io_.read(log_data, size);
 
   if (log_io_.bad()) {

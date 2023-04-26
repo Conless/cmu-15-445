@@ -1,13 +1,17 @@
 #include <algorithm>
+#include <fstream>
 #include <random>
 
 #include "storage/index/b_plus_tree_index_nts.h"
 #include "storage/index/custom_key.h"
+#include "storage/page/b_plus_tree_internal_page.h"
+#include "storage/page/b_plus_tree_leaf_page.h"
 // #include "test_util.h"  // NOLINT
 
 using namespace bustub;  // NOLINT
 
 auto main() -> int {
+  std::ofstream out("test.log");
   StringIntComparator<65> comp(ComparatorType::CompareData);
   StringIntComparator<65> comp_key(ComparatorType::CompareKey);
   BPlusTreeIndex<StringIntKey<65>, int, StringIntComparator<65>, false> tree("haha", comp);
@@ -41,7 +45,8 @@ auto main() -> int {
       key_value = {key, value};
       tree.Delete(key_value);
     }
-    // std::cout << tree.container_->DrawBPlusTree();
+    out << t << '\n';
+    out << tree.container_->DrawBPlusTree();
   }
   return 0;
 }

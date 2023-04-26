@@ -47,6 +47,7 @@ BPLUSTREE_INDEX_NTS_TYPE::~BPlusTreeIndex() {
   auto header_page = bpm_->FetchPageBasic(HEADER_PAGE_ID).As<BPlusTreeHeaderPage>();
   bpm_->FlushAllPages();
   page_id_t next_page_id = bpm_->GetNextPageId();
+  disk_manager_->FlushLog();
   disk_manager_->WriteLog(reinterpret_cast<char *>(&next_page_id), sizeof(page_id_t));
   delete bpm_;
 }
