@@ -6,7 +6,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS True)
 
 project(Bustub)
 
-set(CMAKE_CXX_FLAGS "-pthread -O3")
+set(CMAKE_CXX_FLAGS "-pthread -O0 -g")
 
 set(SOURCE_CPPS
     src/storage/disk/disk_manager.cpp
@@ -21,6 +21,8 @@ set(SOURCE_CPPS
     src/storage/index/index_iterator.cpp
     src/storage/index/b_plus_tree_nts.cpp
     src/storage/index/b_plus_tree.cpp
+    src/storage/index/b_plus_tree_index_nts.cpp
+    src/storage/index/b_plus_tree_index.cpp
 )
 
 set(BUSTUB_SRC_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/src/include)

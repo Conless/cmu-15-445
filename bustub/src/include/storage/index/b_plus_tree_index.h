@@ -19,13 +19,17 @@
 #include "container/hash/hash_function.h"
 #include "storage/index/b_plus_tree.h"
 #include "storage/index/index.h"
+#include "storage/page/b_plus_tree_page.h"
 
 namespace bustub {
 
 #define BPLUSTREE_INDEX_TYPE BPlusTreeIndex<KeyType, ValueType, KeyComparator>
 
+template <typename KeyType, typename ValueType, typename KeyComparator, bool isThreadSafe = true>
+class BPlusTreeIndex : public Index {};
+
 INDEX_TEMPLATE_ARGUMENTS
-class BPlusTreeIndex : public Index {
+class BPlusTreeIndex<KeyType, ValueType, KeyComparator, true> : public Index {
  public:
   BPlusTreeIndex();
 

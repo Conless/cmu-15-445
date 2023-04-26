@@ -4,7 +4,7 @@
 
 namespace bustub {
 
-#define BPLUSTREENTS_TYPE BPlusTree<KeyType, ValueType, KeyComparator, false>
+#define BPLUSTREE_NTS_TYPE BPlusTree<KeyType, ValueType, KeyComparator, false>
 
 class BasicContext {
  public:

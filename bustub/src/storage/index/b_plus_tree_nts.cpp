@@ -16,7 +16,7 @@
 namespace bustub {
 
 INDEX_TEMPLATE_ARGUMENTS
-BPLUSTREENTS_TYPE::BPlusTree(std::string name, page_id_t header_page_id, BufferPoolManager *buffer_pool_manager,
+BPLUSTREE_NTS_TYPE::BPlusTree(std::string name, page_id_t header_page_id, BufferPoolManager *buffer_pool_manager,
                              const KeyComparator &comparator, int leaf_max_size, int internal_max_size)
     : index_name_(std::move(name)),
       bpm_(buffer_pool_manager),
@@ -33,39 +33,39 @@ BPLUSTREENTS_TYPE::BPlusTree(std::string name, page_id_t header_page_id, BufferP
  * Helper function to decide whether current b+tree is empty
  */
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREENTS_TYPE::IsEmpty() const -> bool {
+auto BPLUSTREE_NTS_TYPE::IsEmpty() const -> bool {
   BasicPageGuard guard = bpm_->FetchPageBasic(header_page_id_);
   auto header_page = guard.As<BPlusTreeHeaderPage>();
   return header_page->root_page_id_ == INVALID_PAGE_ID;
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-void BPLUSTREENTS_TYPE::SetNewRoot(page_id_t new_root_id) {
+void BPLUSTREE_NTS_TYPE::SetNewRoot(page_id_t new_root_id) {
   BasicPageGuard header_guard = bpm_->FetchPageBasic(header_page_id_);
   auto header_page = header_guard.AsMut<BPlusTreeHeaderPage>();
   SetNewRoot(new_root_id, header_page);
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-void BPLUSTREENTS_TYPE::SetNewRoot(page_id_t new_root_id, BPlusTreeHeaderPage *header_page) {
+void BPLUSTREE_NTS_TYPE::SetNewRoot(page_id_t new_root_id, BPlusTreeHeaderPage *header_page) {
   header_page->root_page_id_ = new_root_id;
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREENTS_TYPE::CreateNewRoot(IndexPageType page_type) -> page_id_t {
+auto BPLUSTREE_NTS_TYPE::CreateNewRoot(IndexPageType page_type) -> page_id_t {
   BasicPageGuard header_guard = bpm_->FetchPageBasic(header_page_id_);
   auto header_page = header_guard.AsMut<BPlusTreeHeaderPage>();
   return CreateNewRoot(page_type, header_page);
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREENTS_TYPE::CreateNewRoot(IndexPageType page_type, BPlusTreeHeaderPage *header_page) -> page_id_t {
+auto BPLUSTREE_NTS_TYPE::CreateNewRoot(IndexPageType page_type, BPlusTreeHeaderPage *header_page) -> page_id_t {
   header_page->root_page_id_ = CreateNewPage(page_type);
   return header_page->root_page_id_;
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREENTS_TYPE::CreateNewPage(IndexPageType page_type) -> page_id_t {
+auto BPLUSTREE_NTS_TYPE::CreateNewPage(IndexPageType page_type) -> page_id_t {
   page_id_t new_page_id;
   bpm_->NewPageGuarded(&new_page_id);
   BasicPageGuard page_guard = bpm_->FetchPageBasic(new_page_id);
@@ -80,7 +80,7 @@ auto BPLUSTREENTS_TYPE::CreateNewPage(IndexPageType page_type) -> page_id_t {
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREENTS_TYPE::GetRootGuard(bool create_new_root) -> BasicPageGuard {
+auto BPLUSTREE_NTS_TYPE::GetRootGuard(bool create_new_root) -> BasicPageGuard {
   BasicPageGuard header_guard = bpm_->FetchPageBasic(header_page_id_);
   auto header_page = header_guard.AsMut<BPlusTreeHeaderPage>();
   if (header_page->root_page_id_ == INVALID_PAGE_ID) {
@@ -102,12 +102,12 @@ auto BPLUSTREENTS_TYPE::GetRootGuard(bool create_new_root) -> BasicPageGuard {
  * @return : true means key exists
  */
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREENTS_TYPE::GetValue(const KeyType &key, std::vector<ValueType> *result, Transaction *txn) -> bool {
+auto BPLUSTREE_NTS_TYPE::GetValue(const KeyType &key, std::vector<ValueType> *result, Transaction *txn) -> bool {
   return GetValue(key, result, comparator_, txn);
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREENTS_TYPE::GetValue(const KeyType &key, std::vector<ValueType> *result, const KeyComparator &comparator,
+auto BPLUSTREE_NTS_TYPE::GetValue(const KeyType &key, std::vector<ValueType> *result, const KeyComparator &comparator,
                                  Transaction *txn) -> bool {
   // Declaration of context instance.
   BUSTUB_ENSURE(result->empty(), "The result array should be empty.");
@@ -118,7 +118,7 @@ auto BPLUSTREENTS_TYPE::GetValue(const KeyType &key, std::vector<ValueType> *res
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREENTS_TYPE::GetValueInPage(const KeyType &key, std::vector<ValueType> *result, BasicContext *ctx,
+auto BPLUSTREE_NTS_TYPE::GetValueInPage(const KeyType &key, std::vector<ValueType> *result, BasicContext *ctx,
                                        const KeyComparator &comparator) -> bool {
   auto cur_page = ctx->basic_set_.back().As<BPlusTreePage>();
   if (cur_page->IsLeafPage()) {
@@ -135,7 +135,7 @@ auto BPLUSTREENTS_TYPE::GetValueInPage(const KeyType &key, std::vector<ValueType
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREENTS_TYPE::GetValueInLeafPage(const KeyType &key, std::vector<ValueType> *result, BasicContext *ctx,
+auto BPLUSTREE_NTS_TYPE::GetValueInLeafPage(const KeyType &key, std::vector<ValueType> *result, BasicContext *ctx,
                                            const KeyComparator &comparator) -> bool {
   auto leaf_page = ctx->basic_set_.back().As<LeafPage>();
   int index = leaf_page->GetLastIndexL(key, comparator) + 1;
@@ -169,7 +169,7 @@ auto BPLUSTREENTS_TYPE::GetValueInLeafPage(const KeyType &key, std::vector<Value
  * keys return false, otherwise return true.
  */
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREENTS_TYPE::Insert(const KeyType &key, const ValueType &value, Transaction *txn) -> bool {
+auto BPLUSTREE_NTS_TYPE::Insert(const KeyType &key, const ValueType &value, Transaction *txn) -> bool {
   // Declaration of context instance
   BasicContext ctx;
   BasicPageGuard root_guard = GetRootGuard(true);
@@ -196,7 +196,7 @@ auto BPLUSTREENTS_TYPE::Insert(const KeyType &key, const ValueType &value, Trans
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREENTS_TYPE::InsertIntoPage(const KeyType &key, const ValueType &value, BasicContext *ctx) -> bool {
+auto BPLUSTREE_NTS_TYPE::InsertIntoPage(const KeyType &key, const ValueType &value, BasicContext *ctx) -> bool {
   auto cur_page = ctx->basic_set_.back().AsMut<BPlusTreePage>();
   if (cur_page->IsLeafPage()) {
     return InsertIntoLeafPage(key, value, ctx);
@@ -223,7 +223,7 @@ auto BPLUSTREENTS_TYPE::InsertIntoPage(const KeyType &key, const ValueType &valu
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREENTS_TYPE::InsertIntoLeafPage(const KeyType &key, const ValueType &value, BasicContext *ctx) -> bool {
+auto BPLUSTREE_NTS_TYPE::InsertIntoLeafPage(const KeyType &key, const ValueType &value, BasicContext *ctx) -> bool {
   auto leaf_page = ctx->basic_set_.back().AsMut<LeafPage>();
   bool res = leaf_page->InsertData(key, value, comparator_) != -1;
   BasicPageGuard cur_guard = std::move(ctx->basic_set_.back());
@@ -239,7 +239,7 @@ auto BPLUSTREENTS_TYPE::InsertIntoLeafPage(const KeyType &key, const ValueType &
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREENTS_TYPE::ShiftLeafPage(LeafPage *cur_page, InternalPage *last_page, int index) -> bool {
+auto BPLUSTREE_NTS_TYPE::ShiftLeafPage(LeafPage *cur_page, InternalPage *last_page, int index) -> bool {
   bool shifted = false;
   if (index != last_page->GetSize() - 1) {
     page_id_t next_leaf_id = last_page->ValueAt(index + 1);
@@ -267,7 +267,7 @@ auto BPLUSTREENTS_TYPE::ShiftLeafPage(LeafPage *cur_page, InternalPage *last_pag
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREENTS_TYPE::ShiftInternalPage(InternalPage *cur_page, InternalPage *last_page, int index) -> bool {
+auto BPLUSTREE_NTS_TYPE::ShiftInternalPage(InternalPage *cur_page, InternalPage *last_page, int index) -> bool {
   bool shifted = false;
   if (index != last_page->GetSize() - 1) {
     page_id_t next_internal_id = last_page->ValueAt(index + 1);
@@ -299,7 +299,7 @@ auto BPLUSTREENTS_TYPE::ShiftInternalPage(InternalPage *cur_page, InternalPage *
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREENTS_TYPE::SplitLeafPage(LeafPage *cur_page, InternalPage *last_page) -> bool {
+auto BPLUSTREE_NTS_TYPE::SplitLeafPage(LeafPage *cur_page, InternalPage *last_page) -> bool {
   page_id_t new_leaf_id = CreateNewPage(IndexPageType::LEAF_PAGE);
   BasicPageGuard new_leaf_guard = bpm_->FetchPageBasic(new_leaf_id);
   auto new_leaf_page = new_leaf_guard.AsMut<LeafPage>();
@@ -311,7 +311,7 @@ auto BPLUSTREENTS_TYPE::SplitLeafPage(LeafPage *cur_page, InternalPage *last_pag
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREENTS_TYPE::SplitInternalPage(InternalPage *cur_page, InternalPage *last_page) -> bool {
+auto BPLUSTREE_NTS_TYPE::SplitInternalPage(InternalPage *cur_page, InternalPage *last_page) -> bool {
   page_id_t new_internal_id = CreateNewPage(IndexPageType::INTERNAL_PAGE);
   BasicPageGuard new_internal_guard = bpm_->FetchPageBasic(new_internal_id);
   auto new_internal_page = new_internal_guard.AsMut<InternalPage>();
@@ -331,7 +331,7 @@ auto BPLUSTREENTS_TYPE::SplitInternalPage(InternalPage *cur_page, InternalPage *
  * necessary.
  */
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREENTS_TYPE::Remove(const KeyType &key, Transaction *txn) -> bool {
+auto BPLUSTREE_NTS_TYPE::Remove(const KeyType &key, Transaction *txn) -> bool {
   // Declaration of context instance.
   BasicContext ctx;
   BasicPageGuard root_guard = GetRootGuard();
@@ -352,7 +352,7 @@ auto BPLUSTREENTS_TYPE::Remove(const KeyType &key, Transaction *txn) -> bool {
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREENTS_TYPE::RemoveInPage(const KeyType &key, BasicContext *ctx) -> std::pair<bool, KeyType> {
+auto BPLUSTREE_NTS_TYPE::RemoveInPage(const KeyType &key, BasicContext *ctx) -> std::pair<bool, KeyType> {
   auto cur_page = ctx->basic_set_.back().AsMut<BPlusTreePage>();
   if (cur_page->IsLeafPage()) {
     return RemoveInLeafPage(key, ctx);
@@ -384,7 +384,7 @@ auto BPLUSTREENTS_TYPE::RemoveInPage(const KeyType &key, BasicContext *ctx) -> s
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREENTS_TYPE::RemoveInLeafPage(const KeyType &key, BasicContext *ctx) -> std::pair<bool, KeyType> {
+auto BPLUSTREE_NTS_TYPE::RemoveInLeafPage(const KeyType &key, BasicContext *ctx) -> std::pair<bool, KeyType> {
   auto leaf_page = ctx->basic_set_.back().AsMut<LeafPage>();
   int index = leaf_page->RemoveData(key, comparator_);
   if (index == -1) {
@@ -409,7 +409,7 @@ auto BPLUSTREENTS_TYPE::RemoveInLeafPage(const KeyType &key, BasicContext *ctx) 
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREENTS_TYPE::ReplenishLeafPage(LeafPage *cur_page, InternalPage *last_page, int index) -> bool {
+auto BPLUSTREE_NTS_TYPE::ReplenishLeafPage(LeafPage *cur_page, InternalPage *last_page, int index) -> bool {
   bool replenished = false;
   if (index != last_page->GetSize() - 1) {
     page_id_t next_leaf_id = last_page->ValueAt(index + 1);
@@ -437,7 +437,7 @@ auto BPLUSTREENTS_TYPE::ReplenishLeafPage(LeafPage *cur_page, InternalPage *last
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREENTS_TYPE::ReplenishInternalPage(InternalPage *cur_page, InternalPage *last_page, int index) -> bool {
+auto BPLUSTREE_NTS_TYPE::ReplenishInternalPage(InternalPage *cur_page, InternalPage *last_page, int index) -> bool {
   bool replenished = false;
   if (index != last_page->GetSize() - 1) {
     page_id_t next_internal_id = last_page->ValueAt(index + 1);
@@ -469,7 +469,7 @@ auto BPLUSTREENTS_TYPE::ReplenishInternalPage(InternalPage *cur_page, InternalPa
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREENTS_TYPE::CoalesceLeafPage(LeafPage *cur_page, InternalPage *last_page, int index) -> bool {
+auto BPLUSTREE_NTS_TYPE::CoalesceLeafPage(LeafPage *cur_page, InternalPage *last_page, int index) -> bool {
   bool coalesced = false;
   if (index != last_page->GetSize() - 1) {
     page_id_t next_leaf_id = last_page->ValueAt(index + 1);
@@ -499,7 +499,7 @@ auto BPLUSTREENTS_TYPE::CoalesceLeafPage(LeafPage *cur_page, InternalPage *last_
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREENTS_TYPE::CoalesceInternalPage(InternalPage *cur_page, InternalPage *last_page, int index) -> bool {
+auto BPLUSTREE_NTS_TYPE::CoalesceInternalPage(InternalPage *cur_page, InternalPage *last_page, int index) -> bool {
   bool coalesced = false;
   if (index != last_page->GetSize() - 1) {
     page_id_t next_internal_id = last_page->ValueAt(index + 1);
@@ -537,7 +537,7 @@ auto BPLUSTREENTS_TYPE::CoalesceInternalPage(InternalPage *cur_page, InternalPag
  * @return : index iterator
  */
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREENTS_TYPE::Begin() -> INDEXITERATOR_TYPE {
+auto BPLUSTREE_NTS_TYPE::Begin() -> INDEXITERATOR_TYPE {
   page_id_t next_page_id = GetRootPageId();
   if (next_page_id == INVALID_PAGE_ID) {
     return End();
@@ -561,7 +561,7 @@ auto BPLUSTREENTS_TYPE::Begin() -> INDEXITERATOR_TYPE {
  * @return : index iterator
  */
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREENTS_TYPE::Begin(const KeyType &key) -> INDEXITERATOR_TYPE {
+auto BPLUSTREE_NTS_TYPE::Begin(const KeyType &key) -> INDEXITERATOR_TYPE {
   page_id_t next_page_id = GetRootPageId();
   if (next_page_id == INVALID_PAGE_ID) {
     return End();
@@ -589,7 +589,7 @@ auto BPLUSTREENTS_TYPE::Begin(const KeyType &key) -> INDEXITERATOR_TYPE {
  * @return : index iterator
  */
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREENTS_TYPE::End() -> INDEXITERATOR_TYPE { return INDEXITERATOR_TYPE(INVALID_PAGE_ID, 0, bpm_); }
+auto BPLUSTREE_NTS_TYPE::End() -> INDEXITERATOR_TYPE { return INDEXITERATOR_TYPE(INVALID_PAGE_ID, 0, bpm_); }
 
 /*****************************************************************************
  * BASIC OPERATIONS
@@ -599,7 +599,7 @@ auto BPLUSTREENTS_TYPE::End() -> INDEXITERATOR_TYPE { return INDEXITERATOR_TYPE(
  * @return Page id of the root of this tree
  */
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREENTS_TYPE::GetRootPageId() -> page_id_t {
+auto BPLUSTREE_NTS_TYPE::GetRootPageId() -> page_id_t {
   BasicPageGuard guard = bpm_->FetchPageBasic(header_page_id_);
   auto header_page = guard.As<BPlusTreeHeaderPage>();
   return header_page->root_page_id_;
@@ -610,14 +610,14 @@ auto BPLUSTREENTS_TYPE::GetRootPageId() -> page_id_t {
  *****************************************************************************/
 
 INDEX_TEMPLATE_ARGUMENTS
-void BPLUSTREENTS_TYPE::Print(BufferPoolManager *bpm) {
+void BPLUSTREE_NTS_TYPE::Print(BufferPoolManager *bpm) {
   auto root_page_id = GetRootPageId();
   auto guard = bpm->FetchPageBasic(root_page_id);
   PrintTree(guard.PageId(), guard.template As<BPlusTreePage>());
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-void BPLUSTREENTS_TYPE::PrintTree(page_id_t page_id, const BPlusTreePage *page) {
+void BPLUSTREE_NTS_TYPE::PrintTree(page_id_t page_id, const BPlusTreePage *page) {
   if (page->IsLeafPage()) {
     auto *leaf = reinterpret_cast<const LeafPage *>(page);
     std::cout << "Leaf Page: " << page_id << "\tNext: " << leaf->GetNextPageId() << std::endl;
@@ -658,7 +658,7 @@ void BPLUSTREENTS_TYPE::PrintTree(page_id_t page_id, const BPlusTreePage *page) 
  * This method is used for debug only, You don't need to modify
  */
 INDEX_TEMPLATE_ARGUMENTS
-void BPLUSTREENTS_TYPE::Draw(BufferPoolManager *bpm, const std::string &outf) {
+void BPLUSTREE_NTS_TYPE::Draw(BufferPoolManager *bpm, const std::string &outf) {
   if (IsEmpty()) {
     LOG_WARN("Drawing an empty tree");
     return;
@@ -677,7 +677,7 @@ void BPLUSTREENTS_TYPE::Draw(BufferPoolManager *bpm, const std::string &outf) {
  * This method is used for debug only, You don't need to modify
  */
 INDEX_TEMPLATE_ARGUMENTS
-void BPLUSTREENTS_TYPE::ToGraph(page_id_t page_id, const BPlusTreePage *page, std::ofstream &out) {
+void BPLUSTREE_NTS_TYPE::ToGraph(page_id_t page_id, const BPlusTreePage *page, std::ofstream &out) {
   std::string leaf_prefix("LEAF_");
   std::string internal_prefix("INT_");
   if (page->IsLeafPage()) {
@@ -755,7 +755,7 @@ void BPLUSTREENTS_TYPE::ToGraph(page_id_t page_id, const BPlusTreePage *page, st
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREENTS_TYPE::DrawBPlusTree() -> std::string {
+auto BPLUSTREE_NTS_TYPE::DrawBPlusTree() -> std::string {
   if (IsEmpty()) {
     return "()";
   }
@@ -768,7 +768,7 @@ auto BPLUSTREENTS_TYPE::DrawBPlusTree() -> std::string {
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREENTS_TYPE::ToPrintableBPlusTree(page_id_t root_id) -> PrintableBPlusTree {
+auto BPLUSTREE_NTS_TYPE::ToPrintableBPlusTree(page_id_t root_id) -> PrintableBPlusTree {
   auto root_page_guard = bpm_->FetchPageBasic(root_id);
   auto root_page = root_page_guard.template As<BPlusTreePage>();
   PrintableBPlusTree proot;
