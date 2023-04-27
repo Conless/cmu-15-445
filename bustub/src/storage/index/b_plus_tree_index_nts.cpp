@@ -44,7 +44,6 @@ BPLUSTREE_INDEX_NTS_TYPE::BPlusTreeIndex(const std::string &file_name, const Key
 
 INDEX_TEMPLATE_ARGUMENTS
 BPLUSTREE_INDEX_NTS_TYPE::~BPlusTreeIndex() {
-  auto header_page = bpm_->FetchPageBasic(HEADER_PAGE_ID).As<BPlusTreeHeaderPage>();
   bpm_->FlushAllPages();
   page_id_t next_page_id = bpm_->GetNextPageId();
   disk_manager_->FlushLog();
