@@ -4,9 +4,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS True)
 
+set(CMAKE_C_COMPILER "/usr/bin/gcc")
+set(CMAKE_CXX_COMPILER "/usr/bin/g++")
+
 project(Bustub)
 
-set(CMAKE_CXX_FLAGS "-pthread -O0 -g")
+set(CMAKE_CXX_FLAGS "-pthread -Ofast -g")
 
 set(SOURCE_CPPS
     src/storage/disk/disk_manager.cpp

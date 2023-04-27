@@ -27,12 +27,9 @@ auto BasicPageGuard::operator=(BasicPageGuard &&that) noexcept -> BasicPageGuard
   Drop();
   is_dirty_ = that.is_dirty_;
   bpm_ = that.bpm_;
-  if (that.Exist()) {
-    page_ = bpm_->FetchPage(that.PageId());
-  } else {
-    page_ = nullptr;
-  }
-  that.Drop();
+  page_ = that.page_;
+  that.bpm_ = nullptr;
+  that.page_ = nullptr;
   return *this;
 }
 
