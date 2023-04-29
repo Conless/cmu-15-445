@@ -9,7 +9,7 @@ set(CMAKE_CXX_COMPILER "/usr/bin/g++")
 
 project(Bustub)
 
-set(CMAKE_CXX_FLAGS "-pthread -Ofast -g")
+set(CMAKE_CXX_FLAGS "-pthread -O0 -g")
 
 set(SOURCE_CPPS
     src/storage/disk/disk_manager.cpp

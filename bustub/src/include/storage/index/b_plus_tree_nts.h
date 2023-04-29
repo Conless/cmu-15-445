@@ -32,6 +32,7 @@ class BPlusTree<KeyType, ValueType, KeyComparator, false> {
   explicit BPlusTree(std::string name, page_id_t header_page_id, BufferPoolManager *buffer_pool_manager,
                      const KeyComparator &comparator, int leaf_max_size = LEAF_PAGE_SIZE,
                      int internal_max_size = INTERNAL_PAGE_SIZE);
+  ~BPlusTree();
 
   // Returns true if this B+ tree has no keys and values.
   auto IsEmpty() const -> bool;
@@ -79,9 +80,7 @@ class BPlusTree<KeyType, ValueType, KeyComparator, false> {
 
  protected:
   void SetNewRoot(page_id_t new_root_id);
-  void SetNewRoot(page_id_t new_root_id, BPlusTreeHeaderPage *header_page);
   auto CreateNewRoot(IndexPageType page_type) -> page_id_t;
-  auto CreateNewRoot(IndexPageType page_type, BPlusTreeHeaderPage *header_page) -> page_id_t;
   /**
    * @brief Create a New BPlusTreePage object with return value as its page_id. No latch permission is required.
    * @param page_type INTERNAL_PAGE or LEAF_PAGE
@@ -148,6 +147,7 @@ class BPlusTree<KeyType, ValueType, KeyComparator, false> {
   int leaf_max_size_;
   int internal_max_size_;
   page_id_t header_page_id_;
+  page_id_t root_page_id_;
 };
 
 }  // namespace bustub

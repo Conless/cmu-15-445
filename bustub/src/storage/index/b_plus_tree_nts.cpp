@@ -17,13 +17,21 @@ namespace bustub {
 
 INDEX_TEMPLATE_ARGUMENTS
 BPLUSTREE_NTS_TYPE::BPlusTree(std::string name, page_id_t header_page_id, BufferPoolManager *buffer_pool_manager,
-                             const KeyComparator &comparator, int leaf_max_size, int internal_max_size)
+                              const KeyComparator &comparator, int leaf_max_size, int internal_max_size)
     : index_name_(std::move(name)),
       bpm_(buffer_pool_manager),
       comparator_(std::move(comparator)),
       leaf_max_size_(leaf_max_size),
       internal_max_size_(internal_max_size),
       header_page_id_(header_page_id) {
+  auto header_guard = bpm_->FetchPageBasic(header_page_id_);
+  root_page_id_ = header_guard.As<BPlusTreeHeaderPage>()->root_page_id_;
+}
+
+INDEX_TEMPLATE_ARGUMENTS
+BPLUSTREE_NTS_TYPE::~BPlusTree() {
+  auto header_guard = bpm_->FetchPageBasic(header_page_id_);
+  header_guard.AsMut<BPlusTreeHeaderPage>()->root_page_id_ = root_page_id_;
 }
 
 /*
@@ -31,34 +39,17 @@ BPLUSTREE_NTS_TYPE::BPlusTree(std::string name, page_id_t header_page_id, Buffer
  */
 INDEX_TEMPLATE_ARGUMENTS
 auto BPLUSTREE_NTS_TYPE::IsEmpty() const -> bool {
-  BasicPageGuard guard = bpm_->FetchPageBasic(header_page_id_);
-  auto header_page = guard.As<BPlusTreeHeaderPage>();
-  return header_page->root_page_id_ == INVALID_PAGE_ID;
+  return root_page_id_ == INVALID_PAGE_ID;
 }
 
 INDEX_TEMPLATE_ARGUMENTS
 void BPLUSTREE_NTS_TYPE::SetNewRoot(page_id_t new_root_id) {
-  BasicPageGuard header_guard = bpm_->FetchPageBasic(header_page_id_);
-  auto header_page = header_guard.AsMut<BPlusTreeHeaderPage>();
-  SetNewRoot(new_root_id, header_page);
-}
-
-INDEX_TEMPLATE_ARGUMENTS
-void BPLUSTREE_NTS_TYPE::SetNewRoot(page_id_t new_root_id, BPlusTreeHeaderPage *header_page) {
-  header_page->root_page_id_ = new_root_id;
+  root_page_id_ = new_root_id;
 }
 
 INDEX_TEMPLATE_ARGUMENTS
 auto BPLUSTREE_NTS_TYPE::CreateNewRoot(IndexPageType page_type) -> page_id_t {
-  BasicPageGuard header_guard = bpm_->FetchPageBasic(header_page_id_);
-  auto header_page = header_guard.AsMut<BPlusTreeHeaderPage>();
-  return CreateNewRoot(page_type, header_page);
-}
-
-INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREE_NTS_TYPE::CreateNewRoot(IndexPageType page_type, BPlusTreeHeaderPage *header_page) -> page_id_t {
-  header_page->root_page_id_ = CreateNewPage(page_type);
-  return header_page->root_page_id_;
+  return (root_page_id_ = CreateNewPage(page_type));
 }
 
 INDEX_TEMPLATE_ARGUMENTS
@@ -78,15 +69,7 @@ auto BPLUSTREE_NTS_TYPE::CreateNewPage(IndexPageType page_type) -> page_id_t {
 
 INDEX_TEMPLATE_ARGUMENTS
 auto BPLUSTREE_NTS_TYPE::GetRootGuard(bool create_new_root) -> BasicPageGuard {
-  BasicPageGuard header_guard = bpm_->FetchPageBasic(header_page_id_);
-  auto header_page = header_guard.AsMut<BPlusTreeHeaderPage>();
-  if (header_page->root_page_id_ == INVALID_PAGE_ID) {
-    if (!create_new_root) {
-      return {nullptr, nullptr};
-    }
-    CreateNewRoot(IndexPageType::LEAF_PAGE, header_page);
-  }
-  auto root_guard = bpm_->FetchPageBasic(header_page->root_page_id_);
+  auto root_guard = bpm_->FetchPageBasic(root_page_id_);
   return root_guard;
 }
 
@@ -109,7 +92,10 @@ auto BPLUSTREE_NTS_TYPE::GetValue(const KeyType &key, std::vector<ValueType> *re
   // Declaration of context instance.
   BUSTUB_ENSURE(result->empty(), "The result array should be empty.");
   BasicContext ctx;
-  BasicPageGuard root_guard = GetRootGuard();
+  if (root_page_id_ == INVALID_PAGE_ID) {
+    return false;
+  }
+  BasicPageGuard root_guard = bpm_->FetchPageBasic(root_page_id_);
   if (!root_guard.Exist()) {
     return false;
   }
@@ -172,13 +158,16 @@ INDEX_TEMPLATE_ARGUMENTS
 auto BPLUSTREE_NTS_TYPE::Insert(const KeyType &key, const ValueType &value, Transaction *txn) -> bool {
   // Declaration of context instance
   BasicContext ctx;
-  BasicPageGuard root_guard = GetRootGuard(true);
+  if (root_page_id_ == INVALID_PAGE_ID) {
+    root_page_id_ = CreateNewPage(IndexPageType::LEAF_PAGE);
+  }
+  BasicPageGuard root_guard = bpm_->FetchPageBasic(root_page_id_);
   ctx.basic_set_.emplace_back(std::move(root_guard));
   if (InsertIntoPage(key, value, &ctx)) {
     BasicPageGuard cur_guard = GetRootGuard();
     auto cur_page = cur_guard.AsMut<BPlusTreePage>();
     if (cur_page->SizeExceeded()) {
-      page_id_t old_root_id = GetRootPageId();
+      page_id_t old_root_id = root_page_id_;
       page_id_t root_id = CreateNewRoot(IndexPageType::INTERNAL_PAGE);
       BasicPageGuard root_guard = bpm_->FetchPageBasic(root_id);
       auto root_page = root_guard.AsMut<InternalPage>();
@@ -334,7 +323,10 @@ INDEX_TEMPLATE_ARGUMENTS
 auto BPLUSTREE_NTS_TYPE::Remove(const KeyType &key, Transaction *txn) -> bool {
   // Declaration of context instance.
   BasicContext ctx;
-  BasicPageGuard root_guard = GetRootGuard();
+  if (root_page_id_ == INVALID_PAGE_ID) {
+    return false;
+  }
+  BasicPageGuard root_guard = bpm_->FetchPageBasic(root_page_id_);
   if (!root_guard.Exist()) {
     return false;
   }
@@ -605,9 +597,7 @@ auto BPLUSTREE_NTS_TYPE::End() -> INDEXITERATOR_TYPE { return INDEXITERATOR_TYPE
  */
 INDEX_TEMPLATE_ARGUMENTS
 auto BPLUSTREE_NTS_TYPE::GetRootPageId() -> page_id_t {
-  BasicPageGuard guard = bpm_->FetchPageBasic(header_page_id_);
-  auto header_page = guard.As<BPlusTreeHeaderPage>();
-  return header_page->root_page_id_;
+  return root_page_id_;
 }
 
 /*****************************************************************************

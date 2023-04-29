@@ -39,11 +39,12 @@ BPLUSTREE_INDEX_NTS_TYPE::BPlusTreeIndex(const std::string &file_name, const Key
     bpm_->SetNextPageId(next_page_id);
   }
   container_ =
-      std::make_shared<BPLUSTREE_NTS_TYPE>("index", HEADER_PAGE_ID, bpm_, comparator, leaf_max_size, internal_max_size);
+      new BPLUSTREE_NTS_TYPE("index", HEADER_PAGE_ID, bpm_, comparator, leaf_max_size, internal_max_size);
 }
 
 INDEX_TEMPLATE_ARGUMENTS
 BPLUSTREE_INDEX_NTS_TYPE::~BPlusTreeIndex() {
+  delete container_;
   bpm_->FlushAllPages();
   page_id_t next_page_id = bpm_->GetNextPageId();
   disk_manager_->FlushLog();

@@ -44,7 +44,7 @@ class BPlusTreeIndex<KeyType, ValueType, KeyComparator, false> : public Index {
  public:
   DiskManager *disk_manager_;
   BufferPoolManager *bpm_;
-  std::shared_ptr<BPlusTree<KeyType, ValueType, KeyComparator, false>> container_;
+  BPlusTree<KeyType, ValueType, KeyComparator, false> *container_;
 };
 
 }  // namespace bustub
