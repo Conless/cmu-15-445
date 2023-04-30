@@ -6,7 +6,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS True)
 
 project(Bustub)
 
-set(CMAKE_CXX_FLAGS "-pthread -Ofast -g")
+set(CMAKE_CXX_FLAGS "-pthread -Ofast")
 
 set(SOURCE_CPPS
     bustub/src/storage/disk/disk_manager.cpp
