@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cstdio>
 #include <fstream>
 #include <random>
 
@@ -8,8 +9,15 @@
 
 using namespace bustub;  // NOLINT
 
+void write(int num) {  // NOLINT
+  if (num > 9) {
+    write(num / 10);
+  }
+  putchar(num % 10 + '0');
+}
+
 auto main() -> int {
-    // std::ofstream out("test.log");
+  // std::ofstream out("test.log");
   std::ios::sync_with_stdio(false);
   StringIntComparator<65> comp(ComparatorType::CompareData);
   StringIntComparator<65> comp_key(ComparatorType::CompareKey);
@@ -22,23 +30,24 @@ auto main() -> int {
     std::string key;
     int value;
     std::cin >> opt;
-    if (opt == "insert") {
+    if (opt[0] == 'i') {
       std::cin >> key >> value;
       key_value = {key, value};
       tree.Insert(key_value, value);
-    } else if (opt == "find") {
+    } else if (opt[0] == 'f') {
       std::cin >> key;
       key_value = {key, 0};
       std::vector<int> res;
       tree.Search(key_value, &res, comp_key);
       if (res.empty()) {
-        std::cout << "null";
+        puts("null");
       } else {
         for (auto num : res) {
-          std::cout << num << ' ';
+          write(num);
+          putchar(' ');
         }
+        putchar('\n');
       }
-      std::cout << '\n';
     } else if (opt == "delete") {
       std::cin >> key >> value;
       key_value = {key, value};

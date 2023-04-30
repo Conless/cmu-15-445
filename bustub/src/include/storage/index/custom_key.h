@@ -76,9 +76,24 @@ class StringKey : public Key {
   }
   StringKey(const StringKey &x) { memset(str_, 0, sizeof(str_)), strcpy(str_, x.str_); }
   inline auto ToString() const -> std::string override { return std::string(str_); }
-  auto Empty() const -> bool { return strcmp(str_, "") == 0; }
-  auto operator<(const StringKey &x) const -> bool { return strcmp(str_, x.str_) < 0; }
-  auto operator==(const StringKey &x) const -> bool { return strcmp(str_, x.str_) == 0; }
+  auto Empty() const -> bool { return strlen(str_) == 0; }
+  auto operator<(const StringKey<Length> &x) const -> bool {
+    for (int i = 0; i < Length; i++) {
+      if (str_[i] != x.str_[i] || str_[i] == '\0') {
+        return str_[i] < x.str_[i];
+      }
+    }
+  }
+  auto operator==(const StringKey &x) const -> bool {
+    for (int i = 0; i < Length; i++) {
+      if (str_[i] != x.str_[i]) {
+        return false;
+      }
+      if (str_[i] == '\0') {
+        return true;
+      }
+    }
+  }
   explicit operator std::string() const { return std::string(str_); }
   friend auto operator<<(std::ostream &os, const StringKey &rhs) -> std::ostream & { return (os << rhs.str_); }
   friend auto operator>>(std::istream &is, const StringKey &rhs) -> std::istream & { return (is >> rhs.str_); }
