@@ -9,7 +9,7 @@
 using namespace bustub;  // NOLINT
 
 auto main() -> int {
-  //   std::ofstream out("test.log");
+    // std::ofstream out("test.log");
   std::ios::sync_with_stdio(false);
   StringIntComparator<65> comp(ComparatorType::CompareData);
   StringIntComparator<65> comp_key(ComparatorType::CompareKey);

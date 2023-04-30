@@ -163,7 +163,7 @@ auto BPLUSTREE_NTS_TYPE::Insert(const KeyType &key, const ValueType &value, Tran
   }
   BasicPageGuard root_guard = bpm_->FetchPageBasic(root_page_id_);
   ctx.basic_set_.emplace_back(std::move(root_guard));
-  if (InsertIntoPage(key, value, &ctx)) {
+  if (InsertIntoPage(key, value, &ctx, -1)) {
     BasicPageGuard cur_guard = GetRootGuard();
     auto cur_page = cur_guard.AsMut<BPlusTreePage>();
     if (cur_page->SizeExceeded()) {
@@ -185,22 +185,21 @@ auto BPLUSTREE_NTS_TYPE::Insert(const KeyType &key, const ValueType &value, Tran
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREE_NTS_TYPE::InsertIntoPage(const KeyType &key, const ValueType &value, BasicContext *ctx) -> bool {
+auto BPLUSTREE_NTS_TYPE::InsertIntoPage(const KeyType &key, const ValueType &value, BasicContext *ctx, int index) -> bool {
   auto cur_page = ctx->basic_set_.back().AsMut<BPlusTreePage>();
   if (cur_page->IsLeafPage()) {
-    return InsertIntoLeafPage(key, value, ctx);
+    return InsertIntoLeafPage(key, value, ctx, index);
   }
   auto internal_page = reinterpret_cast<InternalPage *>(cur_page);
   int next_insert_index = internal_page->GetLastIndexLE(key, comparator_);
   page_id_t next_page_id = internal_page->ValueAt(next_insert_index);
   auto next_guard = bpm_->FetchPageBasic(next_page_id);
   ctx->basic_set_.emplace_back(std::move(next_guard));
-  if (InsertIntoPage(key, value, ctx)) {
+  if (InsertIntoPage(key, value, ctx, next_insert_index)) {
     BasicPageGuard cur_guard = std::move(ctx->basic_set_.back());
     ctx->basic_set_.pop_back();
     if (internal_page->SizeExceeded() && !ctx->basic_set_.empty()) {
       auto last_page = ctx->basic_set_.back().AsMut<InternalPage>();
-      int index = last_page->GetLastIndexLE(key, comparator_);
       if (!ShiftInternalPage(internal_page, last_page, index)) {
         SplitInternalPage(internal_page, last_page);
       }
@@ -212,14 +211,13 @@ auto BPLUSTREE_NTS_TYPE::InsertIntoPage(const KeyType &key, const ValueType &val
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREE_NTS_TYPE::InsertIntoLeafPage(const KeyType &key, const ValueType &value, BasicContext *ctx) -> bool {
+auto BPLUSTREE_NTS_TYPE::InsertIntoLeafPage(const KeyType &key, const ValueType &value, BasicContext *ctx, int index) -> bool {
   auto leaf_page = ctx->basic_set_.back().AsMut<LeafPage>();
   bool res = leaf_page->InsertData(key, value, comparator_) != -1;
   BasicPageGuard cur_guard = std::move(ctx->basic_set_.back());
   ctx->basic_set_.pop_back();
   if (leaf_page->SizeExceeded() && !ctx->basic_set_.empty()) {
     auto last_page = ctx->basic_set_.back().AsMut<InternalPage>();
-    int index = last_page->GetLastIndexLE(key, comparator_);
     if (!ShiftLeafPage(leaf_page, last_page, index)) {
       SplitLeafPage(leaf_page, last_page);
     }
@@ -331,7 +329,7 @@ auto BPLUSTREE_NTS_TYPE::Remove(const KeyType &key, Transaction *txn) -> bool {
     return false;
   }
   ctx.basic_set_.emplace_back(std::move(root_guard));
-  auto res = RemoveInPage(key, &ctx);
+  auto res = RemoveInPage(key, &ctx, -1);
   if (res.first) {
     BasicPageGuard cur_guard = GetRootGuard();
     auto cur_page = cur_guard.AsMut<BPlusTreePage>();
@@ -347,17 +345,17 @@ auto BPLUSTREE_NTS_TYPE::Remove(const KeyType &key, Transaction *txn) -> bool {
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREE_NTS_TYPE::RemoveInPage(const KeyType &key, BasicContext *ctx) -> std::pair<bool, KeyType> {
+auto BPLUSTREE_NTS_TYPE::RemoveInPage(const KeyType &key, BasicContext *ctx, int index) -> std::pair<bool, KeyType> {
   auto cur_page = ctx->basic_set_.back().AsMut<BPlusTreePage>();
   if (cur_page->IsLeafPage()) {
-    return RemoveInLeafPage(key, ctx);
+    return RemoveInLeafPage(key, ctx, index);
   }
   auto internal_page = reinterpret_cast<InternalPage *>(cur_page);
   int next_remove_index = internal_page->GetLastIndexLE(key, comparator_);
   page_id_t next_page_id = internal_page->ValueAt(next_remove_index);
   auto next_guard = bpm_->FetchPageBasic(next_page_id);
   ctx->basic_set_.emplace_back(std::move(next_guard));
-  auto res = RemoveInPage(key, ctx);
+  auto res = RemoveInPage(key, ctx, next_remove_index);
   BasicPageGuard cur_guard = std::move(ctx->basic_set_.back());
   ctx->basic_set_.pop_back();
   if (res.first) {
@@ -367,7 +365,6 @@ auto BPLUSTREE_NTS_TYPE::RemoveInPage(const KeyType &key, BasicContext *ctx) -> 
     }
     if (internal_page->SizeNotEnough() && !ctx->basic_set_.empty()) {
       auto last_page = ctx->basic_set_.back().AsMut<InternalPage>();
-      int index = last_page->GetLastIndexLE(key, comparator_);
       if (internal_page->GetSize() == 0) {
         last_page->RemoveData(index);
       } else if (!ReplenishInternalPage(internal_page, last_page, index)) {
@@ -379,21 +376,20 @@ auto BPLUSTREE_NTS_TYPE::RemoveInPage(const KeyType &key, BasicContext *ctx) -> 
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREE_NTS_TYPE::RemoveInLeafPage(const KeyType &key, BasicContext *ctx) -> std::pair<bool, KeyType> {
+auto BPLUSTREE_NTS_TYPE::RemoveInLeafPage(const KeyType &key, BasicContext *ctx, int index) -> std::pair<bool, KeyType> {
   auto leaf_page = ctx->basic_set_.back().AsMut<LeafPage>();
-  int index = leaf_page->RemoveData(key, comparator_);
-  if (index == -1) {
+  int remove_index = leaf_page->RemoveData(key, comparator_);
+  if (remove_index == -1) {
     return {false, KeyType()};
   }
   std::pair<bool, KeyType> res = {true, KeyType()};
-  if (index == 0 && leaf_page->GetSize() != 0) {
-    res.second = leaf_page->KeyAt(index);
+  if (remove_index == 0 && leaf_page->GetSize() != 0) {
+    res.second = leaf_page->KeyAt(remove_index);
   }
   BasicPageGuard cur_guard = std::move(ctx->basic_set_.back());
   ctx->basic_set_.pop_back();
   if (leaf_page->SizeNotEnough() && !ctx->basic_set_.empty()) {
     auto last_page = ctx->basic_set_.back().AsMut<InternalPage>();
-    int index = last_page->GetLastIndexLE(key, comparator_);
     if (leaf_page->GetSize() == 0) {
       last_page->RemoveData(index);
     } else if (!ReplenishLeafPage(leaf_page, last_page, index)) {

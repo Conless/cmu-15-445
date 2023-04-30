@@ -106,8 +106,8 @@ class BPlusTree<KeyType, ValueType, KeyComparator, false> {
    * @return true
    * @return false
    */
-  auto InsertIntoPage(const KeyType &key, const ValueType &value, BasicContext *ctx) -> bool;
-  auto InsertIntoLeafPage(const KeyType &key, const ValueType &value, BasicContext *ctx) -> bool;
+  auto InsertIntoPage(const KeyType &key, const ValueType &value, BasicContext *ctx, int index) -> bool;
+  auto InsertIntoLeafPage(const KeyType &key, const ValueType &value, BasicContext *ctx, int index) -> bool;
   auto ShiftLeafPage(LeafPage *cur_page, InternalPage *last_page, int index) -> bool;
   auto ShiftInternalPage(InternalPage *cur_page, InternalPage *last_page, int index) -> bool;
   auto SplitLeafPage(LeafPage *cur_page, InternalPage *last_page) -> bool;
@@ -118,8 +118,8 @@ class BPlusTree<KeyType, ValueType, KeyComparator, false> {
   auto GetValueInLeafPage(const KeyType &key, std::vector<ValueType> *result, BasicContext *ctx,
                           const KeyComparator &comparator) -> bool;
 
-  auto RemoveInPage(const KeyType &key, BasicContext *ctx) -> std::pair<bool, KeyType>;
-  auto RemoveInLeafPage(const KeyType &key, BasicContext *ctx) -> std::pair<bool, KeyType>;
+  auto RemoveInPage(const KeyType &key, BasicContext *ctx, int index) -> std::pair<bool, KeyType>;
+  auto RemoveInLeafPage(const KeyType &key, BasicContext *ctx, int index) -> std::pair<bool, KeyType>;
   auto ReplenishLeafPage(LeafPage *cur_page, InternalPage *last_page, int index) -> bool;
   auto ReplenishInternalPage(InternalPage *cur_page, InternalPage *last_page, int index) -> bool;
   auto CoalesceLeafPage(LeafPage *cur_page, InternalPage *last_page, int index) -> bool;
