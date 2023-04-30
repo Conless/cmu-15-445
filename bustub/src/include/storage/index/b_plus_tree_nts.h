@@ -6,6 +6,13 @@ namespace bustub {
 
 #define BPLUSTREE_NTS_TYPE BPlusTree<KeyType, ValueType, KeyComparator, false>
 
+#ifdef REPLACE_STL
+#include "container/stl/vector.h"
+using sjtu::vector;
+#else
+using std::vector;
+#endif
+
 class BasicContext {
  public:
   // When you insert into / remove from the B+ tree, store the write guard of header page here.
@@ -16,7 +23,7 @@ class BasicContext {
   page_id_t root_page_id_{INVALID_PAGE_ID};
 
   // Store the write guards of the pages that you're modifying here.
-  std::vector<BasicPageGuard> basic_set_;
+  vector<BasicPageGuard> basic_set_;
 
   auto IsRootPage(page_id_t page_id) -> bool { return page_id == root_page_id_; }
 };
@@ -44,9 +51,9 @@ class BPlusTree<KeyType, ValueType, KeyComparator, false> {
   auto Remove(const KeyType &key, Transaction *txn = nullptr) -> bool;
 
   // Return the value associated with a given key
-  auto GetValue(const KeyType &key, std::vector<ValueType> *result, Transaction *txn = nullptr) -> bool;
+  auto GetValue(const KeyType &key, vector<ValueType> *result, Transaction *txn = nullptr) -> bool;
 
-  auto GetValue(const KeyType &key, std::vector<ValueType> *result, const KeyComparator &comparator,
+  auto GetValue(const KeyType &key, vector<ValueType> *result, const KeyComparator &comparator,
                 Transaction *txn = nullptr) -> bool;
 
   // Return the page id of the root node
@@ -113,9 +120,9 @@ class BPlusTree<KeyType, ValueType, KeyComparator, false> {
   auto SplitLeafPage(LeafPage *cur_page, InternalPage *last_page) -> bool;
   auto SplitInternalPage(InternalPage *cur_page, InternalPage *last_page) -> bool;
 
-  auto GetValueInPage(const KeyType &key, std::vector<ValueType> *result, BasicContext *ctx, const KeyComparator &comparator)
+  auto GetValueInPage(const KeyType &key, vector<ValueType> *result, BasicContext *ctx, const KeyComparator &comparator)
       -> bool;
-  auto GetValueInLeafPage(const KeyType &key, std::vector<ValueType> *result, BasicContext *ctx,
+  auto GetValueInLeafPage(const KeyType &key, vector<ValueType> *result, BasicContext *ctx,
                           const KeyComparator &comparator) -> bool;
 
   auto RemoveInPage(const KeyType &key, BasicContext *ctx, int index) -> std::pair<bool, KeyType>;

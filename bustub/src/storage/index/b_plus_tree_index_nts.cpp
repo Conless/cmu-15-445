@@ -78,12 +78,12 @@ void BPLUSTREE_INDEX_NTS_TYPE::ScanKey(const Tuple &key, std::vector<RID> *resul
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-void BPLUSTREE_INDEX_NTS_TYPE::Search(const KeyType &key, std::vector<ValueType> *result, Transaction *transaction) {
+void BPLUSTREE_INDEX_NTS_TYPE::Search(const KeyType &key, vector<ValueType> *result, Transaction *transaction) {
   container_->GetValue(key, result, transaction);
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-void BPLUSTREE_INDEX_NTS_TYPE::Search(const KeyType &key, std::vector<ValueType> *result,
+void BPLUSTREE_INDEX_NTS_TYPE::Search(const KeyType &key, vector<ValueType> *result,
                                       const KeyComparator &comparator, Transaction *transaction) {
   container_->GetValue(key, result, comparator, transaction);
 }

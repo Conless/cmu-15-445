@@ -3,14 +3,18 @@
 #include "buffer/buffer_pool_manager.h"
 #include "storage/disk/disk_manager.h"
 #include "storage/index/b_plus_tree_index.h"
-#include "storage/index/b_plus_tree_nts.h"
-#include "storage/page/b_plus_tree_header_page.h"
 #include "storage/page/b_plus_tree_page.h"
-#include "storage/page/page_guard.h"
 
 #define BPLUSTREE_INDEX_NTS_TYPE BPlusTreeIndex<KeyType, ValueType, KeyComparator, false>
 
 namespace bustub {
+
+#ifdef REPLACE_STL
+#include "container/stl/vector.h"
+using sjtu::vector;
+#else
+using std::vector;
+#endif
 
 INDEX_TEMPLATE_ARGUMENTS
 class BPlusTreeIndex<KeyType, ValueType, KeyComparator, false> : public Index {
@@ -31,9 +35,9 @@ class BPlusTreeIndex<KeyType, ValueType, KeyComparator, false> : public Index {
 
   void Delete(const KeyType &key, Transaction *transaction = nullptr);
 
-  void Search(const KeyType &key, std::vector<ValueType> *result, Transaction *transaction = nullptr);
+  void Search(const KeyType &key, vector<ValueType> *result, Transaction *transaction = nullptr);
 
-  void Search(const KeyType &key, std::vector<ValueType> *result, const KeyComparator &comparator, Transaction *transaction = nullptr);
+  void Search(const KeyType &key, vector<ValueType> *result, const KeyComparator &comparator, Transaction *transaction = nullptr);
 
   auto GetBeginIterator() -> INDEXITERATOR_TYPE;
 

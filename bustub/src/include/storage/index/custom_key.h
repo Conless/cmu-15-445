@@ -84,6 +84,7 @@ class StringKey : public Key {
         return str_[i] < x.str_[i];
       }
     }
+    return false;
   }
   auto operator==(const StringKey &x) const -> bool {
     for (int i = 0; i < Length; i++) {
@@ -94,6 +95,7 @@ class StringKey : public Key {
         return true;
       }
     }
+    return true;
   }
   explicit operator std::string() const { return std::string(str_); }
   friend auto operator<<(std::ostream &os, const StringKey &rhs) -> std::ostream & { return (os << rhs.str_); }

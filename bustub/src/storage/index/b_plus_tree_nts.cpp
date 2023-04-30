@@ -82,12 +82,12 @@ auto BPLUSTREE_NTS_TYPE::GetRootGuard(bool create_new_root) -> BasicPageGuard {
  * @return : true means key exists
  */
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREE_NTS_TYPE::GetValue(const KeyType &key, std::vector<ValueType> *result, Transaction *txn) -> bool {
+auto BPLUSTREE_NTS_TYPE::GetValue(const KeyType &key, vector<ValueType> *result, Transaction *txn) -> bool {
   return GetValue(key, result, comparator_, txn);
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREE_NTS_TYPE::GetValue(const KeyType &key, std::vector<ValueType> *result, const KeyComparator &comparator,
+auto BPLUSTREE_NTS_TYPE::GetValue(const KeyType &key, vector<ValueType> *result, const KeyComparator &comparator,
                                  Transaction *txn) -> bool {
   // Declaration of context instance.
   BUSTUB_ENSURE(result->empty(), "The result array should be empty.");
@@ -99,12 +99,12 @@ auto BPLUSTREE_NTS_TYPE::GetValue(const KeyType &key, std::vector<ValueType> *re
   if (!root_guard.Exist()) {
     return false;
   }
-  ctx.basic_set_.emplace_back(std::move(root_guard));
+  ctx.basic_set_.push_back(std::move(root_guard));
   return GetValueInPage(key, result, &ctx, comparator);
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREE_NTS_TYPE::GetValueInPage(const KeyType &key, std::vector<ValueType> *result, BasicContext *ctx,
+auto BPLUSTREE_NTS_TYPE::GetValueInPage(const KeyType &key, vector<ValueType> *result, BasicContext *ctx,
                                        const KeyComparator &comparator) -> bool {
   auto cur_page = ctx->basic_set_.back().As<BPlusTreePage>();
   if (cur_page->IsLeafPage()) {
@@ -114,14 +114,14 @@ auto BPLUSTREE_NTS_TYPE::GetValueInPage(const KeyType &key, std::vector<ValueTyp
   int next_search_index = internal_page->GetLastIndexL(key, comparator);
   page_id_t next_page_id = internal_page->ValueAt(next_search_index);
   auto next_guard = bpm_->FetchPageBasic(next_page_id);
-  ctx->basic_set_.emplace_back(std::move(next_guard));
+  ctx->basic_set_.push_back(std::move(next_guard));
   bool res = GetValueInPage(key, result, ctx, comparator);
   ctx->basic_set_.pop_back();
   return res;
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREE_NTS_TYPE::GetValueInLeafPage(const KeyType &key, std::vector<ValueType> *result, BasicContext *ctx,
+auto BPLUSTREE_NTS_TYPE::GetValueInLeafPage(const KeyType &key, vector<ValueType> *result, BasicContext *ctx,
                                            const KeyComparator &comparator) -> bool {
   auto leaf_page = ctx->basic_set_.back().As<LeafPage>();
   int index = leaf_page->GetLastIndexL(key, comparator) + 1;
@@ -136,7 +136,7 @@ auto BPLUSTREE_NTS_TYPE::GetValueInLeafPage(const KeyType &key, std::vector<Valu
     page_id_t next_leaf_id = leaf_page->GetNextPageId();
     if (next_leaf_id != INVALID_PAGE_ID) {
       auto next_guard = bpm_->FetchPageBasic(next_leaf_id);
-      ctx->basic_set_.emplace_back(std::move(next_guard));
+      ctx->basic_set_.push_back(std::move(next_guard));
       GetValueInLeafPage(key, result, ctx, comparator);
     }
   }
@@ -162,7 +162,7 @@ auto BPLUSTREE_NTS_TYPE::Insert(const KeyType &key, const ValueType &value, Tran
     root_page_id_ = CreateNewPage(IndexPageType::LEAF_PAGE);
   }
   BasicPageGuard root_guard = bpm_->FetchPageBasic(root_page_id_);
-  ctx.basic_set_.emplace_back(std::move(root_guard));
+  ctx.basic_set_.push_back(std::move(root_guard));
   if (InsertIntoPage(key, value, &ctx, -1)) {
     BasicPageGuard cur_guard = GetRootGuard();
     auto cur_page = cur_guard.AsMut<BPlusTreePage>();
@@ -194,7 +194,7 @@ auto BPLUSTREE_NTS_TYPE::InsertIntoPage(const KeyType &key, const ValueType &val
   int next_insert_index = internal_page->GetLastIndexLE(key, comparator_);
   page_id_t next_page_id = internal_page->ValueAt(next_insert_index);
   auto next_guard = bpm_->FetchPageBasic(next_page_id);
-  ctx->basic_set_.emplace_back(std::move(next_guard));
+  ctx->basic_set_.push_back(std::move(next_guard));
   if (InsertIntoPage(key, value, ctx, next_insert_index)) {
     BasicPageGuard cur_guard = std::move(ctx->basic_set_.back());
     ctx->basic_set_.pop_back();
@@ -328,7 +328,7 @@ auto BPLUSTREE_NTS_TYPE::Remove(const KeyType &key, Transaction *txn) -> bool {
   if (!root_guard.Exist()) {
     return false;
   }
-  ctx.basic_set_.emplace_back(std::move(root_guard));
+  ctx.basic_set_.push_back(std::move(root_guard));
   auto res = RemoveInPage(key, &ctx, -1);
   if (res.first) {
     BasicPageGuard cur_guard = GetRootGuard();
@@ -354,7 +354,7 @@ auto BPLUSTREE_NTS_TYPE::RemoveInPage(const KeyType &key, BasicContext *ctx, int
   int next_remove_index = internal_page->GetLastIndexLE(key, comparator_);
   page_id_t next_page_id = internal_page->ValueAt(next_remove_index);
   auto next_guard = bpm_->FetchPageBasic(next_page_id);
-  ctx->basic_set_.emplace_back(std::move(next_guard));
+  ctx->basic_set_.push_back(std::move(next_guard));
   auto res = RemoveInPage(key, ctx, next_remove_index);
   BasicPageGuard cur_guard = std::move(ctx->basic_set_.back());
   ctx->basic_set_.pop_back();

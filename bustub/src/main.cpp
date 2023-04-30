@@ -60,7 +60,7 @@ auto main() -> int {
     } else if (opt[0] == 'f') {
       read(key);
       key_value = {key, 0};
-      std::vector<int> res;
+      sjtu::vector<int> res;
       tree.Search(key_value, &res, comp_key);
       if (res.empty()) {
         puts("null");
