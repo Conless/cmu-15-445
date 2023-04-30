@@ -65,18 +65,19 @@ class StandardComparator : public Comparator {
 template <size_t Length>
 class StringKey : public Key {
  public:
-  StringKey() { memset(str_, 0, sizeof(str_)); }
+  StringKey() { str_[0] = '\0'; }
   explicit StringKey(const char *str) {
-    memset(str_, 0, sizeof(str_));
-    strcpy(str_, str);
+    for (int i = 0; i < Length; i++) {
+      str_[i] = str[i];
+      if (str[i] == '\0') {
+        return;
+      }
+    }
   }
-  explicit StringKey(const std::string &str) {
-    memset(str_, 0, sizeof(str_));
-    strcpy(str_, str.c_str());
-  }
-  StringKey(const StringKey &x) { memset(str_, 0, sizeof(str_)), strcpy(str_, x.str_); }
+  explicit StringKey(const std::string &str) : StringKey(str.c_str()) { }
+  StringKey(const StringKey &x) : StringKey(x.str_) {}
   inline auto ToString() const -> std::string override { return std::string(str_); }
-  auto Empty() const -> bool { return strlen(str_) == 0; }
+  auto Empty() const -> bool { return str_[0] == '\0'; }
   auto operator<(const StringKey<Length> &x) const -> bool {
     for (int i = 0; i < Length; i++) {
       if (str_[i] != x.str_[i] || str_[i] == '\0') {
