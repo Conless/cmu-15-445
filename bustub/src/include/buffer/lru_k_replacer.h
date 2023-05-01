@@ -24,6 +24,15 @@
 #include "common/config.h"
 #include "common/macros.h"
 
+#ifdef REPLACE_STL
+#include "container/stl/unordered_map.h"
+// #include "container/stl/list.h"
+using sjtu::unordered_map; // NOLINT
+using std::list; // NOLINT
+#else
+using std::unordered_map;
+#endif
+
 namespace bustub {
 
 enum class AccessType { Unknown = 0, Get, Scan };
@@ -35,10 +44,10 @@ class LRUKNode {
   /** History of last seen K timestamps of this page. Least recent timestamp stored in front. */
   // Remove maybe_unused if you start using them. Feel free to change the member variables as you want.
 
-  std::list<size_t> history_;
+  list<size_t> history_;
   size_t cnt_;
   frame_id_t fid_;
-  std::list<frame_info>::iterator iter_;
+  list<frame_info>::iterator iter_;
   bool is_evictable_{false};
 };
 
@@ -156,8 +165,8 @@ class LRUKReplacer {
  private:
   // TODO(student): implement me! You can replace these member variables as you like.
   // Remove maybe_unused if you start using them.
-  std::list<frame_info> temp_frame_list_, cache_frame_list_;
-  std::unordered_map<frame_id_t, LRUKNode> node_store_;
+  list<frame_info> temp_frame_list_, cache_frame_list_;
+  unordered_map<frame_id_t, LRUKNode> node_store_;
   size_t current_timestamp_{0};
   size_t curr_size_{0};
   size_t replacer_size_;

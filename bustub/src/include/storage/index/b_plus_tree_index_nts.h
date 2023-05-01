@@ -7,14 +7,14 @@
 
 #define BPLUSTREE_INDEX_NTS_TYPE BPlusTreeIndex<KeyType, ValueType, KeyComparator, false>
 
-namespace bustub {
-
 #ifdef REPLACE_STL
 #include "container/stl/vector.h"
-using sjtu::vector;
+using sjtu::vector; // NOLINT
 #else
 using std::vector;
 #endif
+
+namespace bustub {
 
 INDEX_TEMPLATE_ARGUMENTS
 class BPlusTreeIndex<KeyType, ValueType, KeyComparator, false> : public Index {

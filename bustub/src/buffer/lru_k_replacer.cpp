@@ -53,7 +53,7 @@ void LRUKReplacer::RecordAccess(frame_id_t frame_id, [[maybe_unused]] AccessType
   auto &node = node_store_[frame_id];
   node.fid_ = frame_id;
   node.cnt_++;
-  node.history_.emplace_back(current_timestamp_);
+  node.history_.push_back(current_timestamp_);
   if (node.cnt_ == 1) {
     if (curr_size_ == replacer_size_) {
       bool flag = false;
@@ -79,7 +79,7 @@ void LRUKReplacer::RecordAccess(frame_id_t frame_id, [[maybe_unused]] AccessType
       }
     }
     curr_size_++;
-    temp_frame_list_.emplace_back(std::make_pair(frame_id, current_timestamp_));
+    temp_frame_list_.push_back(std::make_pair(frame_id, current_timestamp_)); // NOLINT
     node.is_evictable_ = true;
     node.iter_ = std::prev(temp_frame_list_.end());
   }

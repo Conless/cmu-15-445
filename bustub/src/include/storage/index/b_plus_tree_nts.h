@@ -2,16 +2,16 @@
 
 #include "storage/index/b_plus_tree.h"
 
-namespace bustub {
-
-#define BPLUSTREE_NTS_TYPE BPlusTree<KeyType, ValueType, KeyComparator, false>
-
 #ifdef REPLACE_STL
 #include "container/stl/vector.h"
-using sjtu::vector;
+using sjtu::vector; // NOLINT
 #else
 using std::vector;
 #endif
+
+namespace bustub {
+
+#define BPLUSTREE_NTS_TYPE BPlusTree<KeyType, ValueType, KeyComparator, false>
 
 class BasicContext {
  public:
