@@ -15,6 +15,35 @@
 #include <exception>
 #include "common/exception.h"
 
+#ifdef REPLACE_STL
+namespace std {
+using iter = typename sjtu::list<std::pair<int, unsigned long>>::iterator; // NOLINT
+auto prev(iter it) { // NOLINT
+  return --it;
+}
+template <class Compare>
+auto upper_bound(iter first, iter last, std::pair<int, unsigned long> val, Compare comp) { // NOLINT
+  while (first != last) {
+    if (*first > val) {
+      break;
+    }
+    first++;
+  }
+  return first;
+}
+template <class Function>
+auto any_of(iter first, iter last, Function func) { // NOLINT
+  while (first != last) {
+    if (func(*first)) {
+      return true;
+    }
+    first++;
+  }
+  return false;
+}
+}  // namespace std
+#endif
+
 namespace bustub {
 
 LRUKReplacer::LRUKReplacer(size_t num_frames, size_t k, bool is_thread_safe)

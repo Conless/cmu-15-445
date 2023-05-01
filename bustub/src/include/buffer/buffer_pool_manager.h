@@ -26,12 +26,13 @@
 
 #ifdef REPLACE_STL
 #include "container/stl/unordered_map.h"
-// #include "container/stl/list.h"
+#include "container/stl/list.h"
 using sjtu::unordered_map;  // NOLINT
-using std::list; // NOLINT
+using sjtu::list; // NOLINT
 #else
 using std::unordered_map;
 using std::list;
+using std::prev;
 #endif
 
 namespace bustub {

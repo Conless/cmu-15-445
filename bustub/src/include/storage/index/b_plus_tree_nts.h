@@ -150,7 +150,7 @@ class BPlusTree<KeyType, ValueType, KeyComparator, false> {
   std::string index_name_;
   BufferPoolManager *bpm_;
   KeyComparator comparator_;
-  std::vector<std::string> log;  // NOLINT
+  vector<std::string> log;  // NOLINT
   int leaf_max_size_;
   int internal_max_size_;
   page_id_t header_page_id_;
