@@ -61,7 +61,7 @@ class list {  // NOLINT
      * TODO iter++
      */
     auto operator++(int) -> base_iterator {
-      if (ptr_ == nullptr) {
+      if (ptr_ == nullptr || ptr_ == iter_->tail_) {
         throw bustub::Exception(bustub::ExceptionType::OUT_OF_RANGE, "index out of range");
       }
       base_iterator cp = *this;
@@ -72,7 +72,7 @@ class list {  // NOLINT
      * TODO ++iter
      */
     auto operator++() -> base_iterator & {
-      if (ptr_ == nullptr) {
+      if (ptr_ == nullptr || ptr_ == iter_->tail_) {
         throw bustub::Exception(bustub::ExceptionType::OUT_OF_RANGE, "index out of range");
       }
       ptr_ = ptr_->next_;
@@ -82,21 +82,21 @@ class list {  // NOLINT
      * TODO iter--
      */
     auto operator--(int) -> base_iterator {
-      if (ptr_ == iter_->head_) {
+      if (ptr_ == nullptr || ptr_->prev_ == iter_->head_) {
         throw bustub::Exception(bustub::ExceptionType::OUT_OF_RANGE, "index out of range");
       }
       base_iterator cp = *this;
-      ptr_ = ptr_ == nullptr ? iter_->tail_ : ptr_->prev_;
+      ptr_ = ptr_->prev_;
       return cp;
     }
     /**
      * TODO --iter
      */
     auto operator--() -> base_iterator & {
-      if (ptr_ == iter_->head_) {
+      if (ptr_ == nullptr || ptr_->prev_ == iter_->head_) {
         throw bustub::Exception(bustub::ExceptionType::OUT_OF_RANGE, "index out of range");
       }
-      ptr_ = ptr_ == nullptr ? iter_->tail_ : ptr_->prev_;
+      ptr_ = ptr_->prev_;
       return *this;
     }
 
@@ -112,8 +112,6 @@ class list {  // NOLINT
         cp--;
       }
     }
-
-    friend auto prev(base_iterator it) -> base_iterator { return --it; }  // NOLINT
 
     /**
      * a operator to check whether two iterators are same (pointing to the same memory).
@@ -136,91 +134,99 @@ class list {  // NOLINT
   using iterator = base_iterator<false>;
   using const_iterator = base_iterator<true>;
 
-  auto empty() -> bool { return head_ == tail_; }  // NOLINT
+  list() {
+    head_ = new Lnode(T());
+    tail_ = new Lnode(T());
+    head_->next_ = tail_;
+    tail_->prev_ = head_;
+  }
+  list(const list &other) {
+    head_ = new Lnode(T());
+    tail_ = new Lnode(T());
+    Lnode *cur = head_;
+    Lnode *tmp = other.head_->next_;
+    while (tmp != other.tail_) {
+      cur->next_ = new Lnode(tmp->data_);
+      cur->next_->prev_ = cur;
+      cur = cur->next_;
+      tmp = tmp->next_;
+    }
+    cur->next_ = tail_;
+    tail_->prev_ = cur;
+  }
+  ~list() {
+    Lnode *tmp = head_;
+    Lnode *nex;
+    while (tmp != nullptr) {
+      nex = tmp->next_;
+      delete tmp;
+      tmp = nex;
+    }
+    head_ = tail_ = nullptr;
+  }
 
-  auto begin() -> iterator { return iterator{this, head_}; }               // NOLINT
-  auto cbegin() -> const_iterator { return const_iterator{this, head_}; }  // NOLINT
-  auto end() -> iterator { return iterator{this, nullptr}; }                 // NOLINT
-  auto cend() -> const_iterator { return const_iterator{this, nullptr}; }    // NOLINT
+  auto empty() const -> bool { return head_->next_ == tail_; }  // NOLINT
+
+  auto begin() -> iterator { return iterator{this, head_->next_}; }               // NOLINT
+  auto cbegin() -> const_iterator { return const_iterator{this, head_->next_}; }  // NOLINT
+  auto end() -> iterator { return iterator{this, tail_}; }                        // NOLINT
+  auto cend() -> const_iterator { return const_iterator{this, tail_}; }           // NOLINT
 
   auto front() const -> const T & {  // NOLINT
-    if (head_ == nullptr) {
+    if (empty()) {
       throw bustub::Exception(bustub::ExceptionType::OUT_OF_RANGE, "index out of range");
     }
-    return head_->data_;
+    return head_->next_->data_;
   }
   auto tail() const -> const T & {  // NOLINT
-    if (tail_ == nullptr) {
+    if (empty()) {
       throw bustub::Exception(bustub::ExceptionType::OUT_OF_RANGE, "index out of range");
     }
-    return tail_->data_;
+    return tail_->prev_->data_;
   }
 
   auto insert(iterator pos, const T &data) -> iterator {  // NOLINT
-    if (pos == begin()) {
-      push_front(data);
-      return begin();
-    }
-    if (pos == end()) {
-      push_back(data);
-      return {this, tail_};
-    }
     auto *tmp = new Lnode(data);
     tmp->prev_ = pos.ptr_->prev_;
-    tmp->next_ = pos.ptr_;
     pos.ptr_->prev_->next_ = tmp;
+    tmp->next_ = pos.ptr_;
     pos.ptr_->prev_ = tmp;
     return {this, tmp};
   }
 
-  void push_front(const T &data) {  // NOLINT
-    auto *tmp = new Lnode(data);
-    if (tail_ == nullptr) {
-      head_ = tail_ = tmp;
-    } else {
-      tmp->prev_ = tail_;
-      tail_->next_ = tmp;
-      tail_ = tmp;
-    }
-  }
+  void push_front(const T &data) { insert({this, head_->next_}, data); }  // NOLINT
 
-  void push_back(const T &data) {  // NOLINT
-    auto *tmp = new Lnode(data);
-    if (tail_ == nullptr) {
-      head_ = tail_ = tmp;
-    } else {
-      tmp->prev_ = tail_;
-      tail_->next_ = tmp;
-      tail_ = tmp;
-    }
-  }
+  void push_back(const T &data) { insert({this, tail_}, data); }  // NOLINT
 
   void erase(iterator pos) {  // NOLINT
     if (pos.iter_ != this) {
       throw bustub::Exception(bustub::ExceptionType::INVALID, "pointing to another list");
     }
-    if (pos.ptr_->prev_ != nullptr) {
-      pos.ptr_->prev_->next_ = pos.ptr_->next_;
-    }
-    if (pos.ptr_->next_ != nullptr) {
-      pos.ptr_->next_->prev_ = pos.ptr_->prev_;
-    }
-    if (head_ == pos.ptr_) {
-      head_ = pos.ptr_->next_;
-    }
-    if (tail_ == pos.ptr_) {
-      tail_ = pos.ptr_->prev_;
-    }
+    pos.ptr_->prev_->next_ = pos.ptr_->next_;
+    pos.ptr_->next_->prev_ = pos.ptr_->prev_;
     delete pos.ptr_;
+    pos.ptr_ = nullptr;
   }
 
-  void pop_front() { erase(begin()); }       // NOLINT
-  void pop_back() { erase({this, tail_}); }  // NOLINT
+  void pop_front() {  // NOLINT
+    if (empty()) {
+      throw bustub::Exception(bustub::ExceptionType::OUT_OF_RANGE, "index out of range");
+    }
+    erase({this, head_->next_});
+  }
+  void pop_back() {  // NOLINT
+    if (empty()) {
+      throw bustub::Exception(bustub::ExceptionType::OUT_OF_RANGE, "index out of range");
+    }
+    erase({this, tail_->prev_});
+  }
 
  private:
   Lnode *head_;
   Lnode *tail_;
 };
+
+template class list<int>;
 
 }  // namespace sjtu
 
