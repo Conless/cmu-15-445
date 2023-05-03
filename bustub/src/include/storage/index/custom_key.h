@@ -33,6 +33,8 @@ class StandardKey : public Key {
  public:
   StandardKey() = default;
   StandardKey(const KeyType &data) : data_(data) {}  // NOLINT
+  StandardKey(const StandardKey &other) = default;
+  auto operator=(const StandardKey &other) -> StandardKey & = default;
   inline void SetFromInteger(int64_t key) override { data_ = static_cast<KeyType>(key); }
   inline auto ToString() const -> std::string override { return std::to_string(data_); }
   friend auto operator<<(std::ostream &os, const StandardKey &key) -> std::ostream & {
@@ -46,6 +48,8 @@ template <typename KeyType>
 class StandardComparator : public Comparator {
  public:
   StandardComparator() = delete;
+  StandardComparator(const StandardComparator &) = default;
+  StandardComparator(StandardComparator &&) noexcept = default;
   inline auto operator()(const StandardKey<KeyType> &lhs, const StandardKey<KeyType> &rhs) const -> int {
     if (lhs.data_ < rhs.data_) {
       return -1;
@@ -139,6 +143,8 @@ class StringIntComparator : public Comparator {
  public:
   StringIntComparator() = delete;
   explicit StringIntComparator(ComparatorType type) : type_(type) {}
+  StringIntComparator(const StringIntComparator &) = default;
+  StringIntComparator(StringIntComparator &&other) noexcept { type_ = other.type_; }
   inline auto operator()(const StringIntKey<Length> &lhs, const StringIntKey<Length> &rhs) const -> int {
     if (type_ == CompareKey) {
       if (lhs.key_ < rhs.key_) {

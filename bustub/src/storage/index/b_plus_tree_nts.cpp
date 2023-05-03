@@ -15,17 +15,35 @@
 
 namespace bustub {
 
+/**
+ * @brief The constructor of BPlusTree (non-thread-safe)
+ *
+ * @param name The index name of the BPlusTree, not related to the file name, which is stored in BufferPoolManager
+ * @param header_page_id The page id of the existed header page, which will be created by the constructor of
+BPlusTreeIndex or other functions.
+ * @param buffer_pool_manager The buffer pool manager using in bpt
+ * @param comparator The default comparator
+ * @param leaf_max_size The maximum leaf page size
+ * @param internal_max_size The maximum internal page size
+ * @param inherit_file The tag of file inherit that determines whether to reset root page id
+ */
 INDEX_TEMPLATE_ARGUMENTS
 BPLUSTREE_NTS_TYPE::BPlusTree(std::string name, page_id_t header_page_id, BufferPoolManager *buffer_pool_manager,
-                              const KeyComparator &comparator, int leaf_max_size, int internal_max_size)
+                              const KeyComparator &comparator, int leaf_max_size, int internal_max_size,
+                              bool inherit_file)
     : index_name_(std::move(name)),
+      inherit_file_(inherit_file),
       bpm_(buffer_pool_manager),
       comparator_(std::move(comparator)),
       leaf_max_size_(leaf_max_size),
       internal_max_size_(internal_max_size),
       header_page_id_(header_page_id) {
-  auto header_guard = bpm_->FetchPageBasic(header_page_id_);
-  root_page_id_ = header_guard.As<BPlusTreeHeaderPage>()->root_page_id_;
+  BasicPageGuard header_guard = bpm_->FetchPageBasic(header_page_id_);
+  auto header_page = header_guard.AsMut<BPlusTreeHeaderPage>();
+  if (!inherit_file) {
+    header_page->root_page_id_ = INVALID_PAGE_ID;
+  }
+  root_page_id_ = header_page->root_page_id_;
 }
 
 INDEX_TEMPLATE_ARGUMENTS
@@ -38,14 +56,10 @@ BPLUSTREE_NTS_TYPE::~BPlusTree() {
  * Helper function to decide whether current b+tree is empty
  */
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREE_NTS_TYPE::IsEmpty() const -> bool {
-  return root_page_id_ == INVALID_PAGE_ID;
-}
+auto BPLUSTREE_NTS_TYPE::IsEmpty() const -> bool { return root_page_id_ == INVALID_PAGE_ID; }
 
 INDEX_TEMPLATE_ARGUMENTS
-void BPLUSTREE_NTS_TYPE::SetNewRoot(page_id_t new_root_id) {
-  root_page_id_ = new_root_id;
-}
+void BPLUSTREE_NTS_TYPE::SetNewRoot(page_id_t new_root_id) { root_page_id_ = new_root_id; }
 
 INDEX_TEMPLATE_ARGUMENTS
 auto BPLUSTREE_NTS_TYPE::CreateNewRoot(IndexPageType page_type) -> page_id_t {
@@ -88,7 +102,7 @@ auto BPLUSTREE_NTS_TYPE::GetValue(const KeyType &key, vector<ValueType> *result,
 
 INDEX_TEMPLATE_ARGUMENTS
 auto BPLUSTREE_NTS_TYPE::GetValue(const KeyType &key, vector<ValueType> *result, const KeyComparator &comparator,
-                                 Transaction *txn) -> bool {
+                                  Transaction *txn) -> bool {
   // Declaration of context instance.
   BUSTUB_ENSURE(result->empty(), "The result array should be empty.");
   BasicContext ctx;
@@ -105,7 +119,7 @@ auto BPLUSTREE_NTS_TYPE::GetValue(const KeyType &key, vector<ValueType> *result,
 
 INDEX_TEMPLATE_ARGUMENTS
 auto BPLUSTREE_NTS_TYPE::GetValueInPage(const KeyType &key, vector<ValueType> *result, BasicContext *ctx,
-                                       const KeyComparator &comparator) -> bool {
+                                        const KeyComparator &comparator) -> bool {
   auto cur_page = ctx->basic_set_.back().As<BPlusTreePage>();
   if (cur_page->IsLeafPage()) {
     return GetValueInLeafPage(key, result, ctx, comparator);
@@ -122,7 +136,7 @@ auto BPLUSTREE_NTS_TYPE::GetValueInPage(const KeyType &key, vector<ValueType> *r
 
 INDEX_TEMPLATE_ARGUMENTS
 auto BPLUSTREE_NTS_TYPE::GetValueInLeafPage(const KeyType &key, vector<ValueType> *result, BasicContext *ctx,
-                                           const KeyComparator &comparator) -> bool {
+                                            const KeyComparator &comparator) -> bool {
   auto leaf_page = ctx->basic_set_.back().As<LeafPage>();
   int index = leaf_page->GetLastIndexL(key, comparator) + 1;
   int size = leaf_page->GetSize();
@@ -185,7 +199,8 @@ auto BPLUSTREE_NTS_TYPE::Insert(const KeyType &key, const ValueType &value, Tran
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREE_NTS_TYPE::InsertIntoPage(const KeyType &key, const ValueType &value, BasicContext *ctx, int index) -> bool {
+auto BPLUSTREE_NTS_TYPE::InsertIntoPage(const KeyType &key, const ValueType &value, BasicContext *ctx, int index)
+    -> bool {
   auto cur_page = ctx->basic_set_.back().AsMut<BPlusTreePage>();
   if (cur_page->IsLeafPage()) {
     return InsertIntoLeafPage(key, value, ctx, index);
@@ -211,7 +226,8 @@ auto BPLUSTREE_NTS_TYPE::InsertIntoPage(const KeyType &key, const ValueType &val
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREE_NTS_TYPE::InsertIntoLeafPage(const KeyType &key, const ValueType &value, BasicContext *ctx, int index) -> bool {
+auto BPLUSTREE_NTS_TYPE::InsertIntoLeafPage(const KeyType &key, const ValueType &value, BasicContext *ctx, int index)
+    -> bool {
   auto leaf_page = ctx->basic_set_.back().AsMut<LeafPage>();
   bool res = leaf_page->InsertData(key, value, comparator_) != -1;
   BasicPageGuard cur_guard = std::move(ctx->basic_set_.back());
@@ -376,7 +392,8 @@ auto BPLUSTREE_NTS_TYPE::RemoveInPage(const KeyType &key, BasicContext *ctx, int
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREE_NTS_TYPE::RemoveInLeafPage(const KeyType &key, BasicContext *ctx, int index) -> std::pair<bool, KeyType> {
+auto BPLUSTREE_NTS_TYPE::RemoveInLeafPage(const KeyType &key, BasicContext *ctx, int index)
+    -> std::pair<bool, KeyType> {
   auto leaf_page = ctx->basic_set_.back().AsMut<LeafPage>();
   int remove_index = leaf_page->RemoveData(key, comparator_);
   if (remove_index == -1) {
@@ -592,9 +609,7 @@ auto BPLUSTREE_NTS_TYPE::End() -> INDEXITERATOR_TYPE { return INDEXITERATOR_TYPE
  * @return Page id of the root of this tree
  */
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREE_NTS_TYPE::GetRootPageId() -> page_id_t {
-  return root_page_id_;
-}
+auto BPLUSTREE_NTS_TYPE::GetRootPageId() -> page_id_t { return root_page_id_; }
 
 /*****************************************************************************
  * UTILITIES AND DEBUG

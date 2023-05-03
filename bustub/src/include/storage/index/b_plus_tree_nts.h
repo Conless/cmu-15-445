@@ -11,8 +11,12 @@ using std::vector;
 
 namespace bustub {
 
-#define BPLUSTREE_NTS_TYPE BPlusTree<KeyType, ValueType, KeyComparator, false>
-
+/**
+ * @brief Definition of the BasicContext class.
+ *
+ * Hint: This class is designed to help you keep track of the pages
+ * that you're modifying or accessing.
+ */
 class BasicContext {
  public:
   // When you insert into / remove from the B+ tree, store the write guard of header page here.
@@ -28,6 +32,8 @@ class BasicContext {
   auto IsRootPage(page_id_t page_id) -> bool { return page_id == root_page_id_; }
 };
 
+#define BPLUSTREE_NTS_TYPE BPlusTree<KeyType, ValueType, KeyComparator, false>
+
 // Main class providing the API for the Interactive B+ Tree.
 
 INDEX_TEMPLATE_ARGUMENTS
@@ -38,7 +44,7 @@ class BPlusTree<KeyType, ValueType, KeyComparator, false> {
  public:
   explicit BPlusTree(std::string name, page_id_t header_page_id, BufferPoolManager *buffer_pool_manager,
                      const KeyComparator &comparator, int leaf_max_size = LEAF_PAGE_SIZE,
-                     int internal_max_size = INTERNAL_PAGE_SIZE);
+                     int internal_max_size = INTERNAL_PAGE_SIZE, bool inherit_file = true);
   ~BPlusTree();
 
   // Returns true if this B+ tree has no keys and values.
@@ -147,7 +153,8 @@ class BPlusTree<KeyType, ValueType, KeyComparator, false> {
   auto ToPrintableBPlusTree(page_id_t root_id) -> PrintableBPlusTree;
 
   // member variable
-  std::string index_name_;
+  const std::string index_name_;
+  const bool inherit_file_;
   BufferPoolManager *bpm_;
   KeyComparator comparator_;
   vector<std::string> log;  // NOLINT

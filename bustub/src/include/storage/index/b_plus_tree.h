@@ -30,6 +30,13 @@
 #include "storage/page/b_plus_tree_page.h"
 #include "storage/page/page_guard.h"
 
+#ifdef REPLACE_STL
+#include "container/stl/vector.h"
+using sjtu::vector; // NOLINT
+#else
+using std::vector;
+#endif
+
 namespace bustub {
 
 struct PrintableBPlusTree;
@@ -73,7 +80,9 @@ class BPlusTree<KeyType, ValueType, KeyComparator, true> {
  public:
   explicit BPlusTree(std::string name, page_id_t header_page_id, BufferPoolManager *buffer_pool_manager,
                      const KeyComparator &comparator, int leaf_max_size = LEAF_PAGE_SIZE,
-                     int internal_max_size = INTERNAL_PAGE_SIZE);
+                     int internal_max_size = INTERNAL_PAGE_SIZE, bool inherit_file = false);
+
+  ~BPlusTree();
 
   // Returns true if this B+ tree has no keys and values.
   auto IsEmpty() const -> bool;
@@ -85,9 +94,9 @@ class BPlusTree<KeyType, ValueType, KeyComparator, true> {
   auto Remove(const KeyType &key, Transaction *txn) -> bool;
 
   // Return the value associated with a given key
-  auto GetValue(const KeyType &key, std::vector<ValueType> *result, Transaction *txn = nullptr) -> bool;
+  auto GetValue(const KeyType &key, vector<ValueType> *result, Transaction *txn = nullptr) -> bool;
 
-  auto GetValue(const KeyType &key, std::vector<ValueType> *result, const KeyComparator &comparator,
+  auto GetValue(const KeyType &key, vector<ValueType> *result, const KeyComparator &comparator,
                 Transaction *txn = nullptr) -> bool;
 
   // Return the page id of the root node
@@ -156,20 +165,20 @@ class BPlusTree<KeyType, ValueType, KeyComparator, true> {
    * @return true
    * @return false
    */
-  auto InsertIntoPage(const KeyType &key, const ValueType &value, Context *ctx) -> bool;
-  auto InsertIntoLeafPage(const KeyType &key, const ValueType &value, Context *ctx) -> bool;
+  auto InsertIntoPage(const KeyType &key, const ValueType &value, Context *ctx, int index) -> bool;
+  auto InsertIntoLeafPage(const KeyType &key, const ValueType &value, Context *ctx, int index) -> bool;
   auto ShiftLeafPage(LeafPage *cur_page, InternalPage *last_page, int index) -> bool;
   auto ShiftInternalPage(InternalPage *cur_page, InternalPage *last_page, int index) -> bool;
   auto SplitLeafPage(LeafPage *cur_page, InternalPage *last_page) -> bool;
   auto SplitInternalPage(InternalPage *cur_page, InternalPage *last_page) -> bool;
 
-  auto GetValueInPage(const KeyType &key, std::vector<ValueType> *result, Context *ctx, const KeyComparator &comparator)
+  auto GetValueInPage(const KeyType &key, vector<ValueType> *result, Context *ctx, const KeyComparator &comparator)
       -> bool;
-  auto GetValueInLeafPage(const KeyType &key, std::vector<ValueType> *result, Context *ctx,
+  auto GetValueInLeafPage(const KeyType &key, vector<ValueType> *result, Context *ctx,
                           const KeyComparator &comparator) -> bool;
 
-  auto RemoveInPage(const KeyType &key, Context *ctx) -> std::pair<bool, KeyType>;
-  auto RemoveInLeafPage(const KeyType &key, Context *ctx) -> std::pair<bool, KeyType>;
+  auto RemoveInPage(const KeyType &key, Context *ctx, int index) -> std::pair<bool, KeyType>;
+  auto RemoveInLeafPage(const KeyType &key, Context *ctx, int index) -> std::pair<bool, KeyType>;
   auto ReplenishLeafPage(LeafPage *cur_page, InternalPage *last_page, int index) -> bool;
   auto ReplenishInternalPage(InternalPage *cur_page, InternalPage *last_page, int index) -> bool;
   auto CoalesceLeafPage(LeafPage *cur_page, InternalPage *last_page, int index) -> bool;
@@ -190,10 +199,11 @@ class BPlusTree<KeyType, ValueType, KeyComparator, true> {
   auto ToPrintableBPlusTree(page_id_t root_id) -> PrintableBPlusTree;
 
   // member variable
-  std::string index_name_;
+  const std::string index_name_;
+  const bool inherit_file_;
   BufferPoolManager *bpm_;
   KeyComparator comparator_;
-  std::vector<std::string> log;  // NOLINT
+  vector<std::string> log;  // NOLINT
   int leaf_max_size_;
   int internal_max_size_;
   page_id_t header_page_id_;
