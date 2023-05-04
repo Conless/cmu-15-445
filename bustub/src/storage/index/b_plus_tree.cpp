@@ -46,8 +46,10 @@ BPLUSTREE_TYPE::BPlusTree(std::string name, page_id_t header_page_id, BufferPool
 
 INDEX_TEMPLATE_ARGUMENTS
 BPLUSTREE_TYPE::~BPlusTree() {
-  auto header_guard = bpm_->FetchPageBasic(header_page_id_);
-  header_guard.AsMut<BPlusTreeHeaderPage>()->root_page_id_ = INVALID_PAGE_ID;
+  if (inherit_file_) {
+    auto header_guard = bpm_->FetchPageBasic(header_page_id_);
+    header_guard.AsMut<BPlusTreeHeaderPage>()->root_page_id_ = INVALID_PAGE_ID;
+  }
 }
 
 /*
@@ -158,10 +160,10 @@ auto BPLUSTREE_TYPE::GetValueInPage(const KeyType &key, vector<ValueType> *resul
   auto internal_page = reinterpret_cast<const InternalPage *>(cur_page);
   int next_search_index = internal_page->GetLastIndexL(key, comparator);
   page_id_t next_page_id = internal_page->ValueAt(next_search_index);
+  ctx->read_set_.pop_back();
   auto next_guard = bpm_->FetchPageRead(next_page_id);
   ctx->read_set_.emplace_back(std::move(next_guard));
   bool res = GetValueInPage(key, result, ctx, comparator);
-  ctx->read_set_.pop_back();
   return res;
 }
 

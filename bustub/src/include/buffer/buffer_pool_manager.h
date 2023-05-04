@@ -25,14 +25,14 @@
 #include "storage/page/page_guard.h"
 
 #ifdef REPLACE_STL
-#include "container/stl/unordered_map.h"
 #include "container/stl/list.h"
+#include "container/stl/unordered_map.h"
+using sjtu::list;           // NOLINT
 using sjtu::unordered_map;  // NOLINT
-using sjtu::list; // NOLINT
 #else
-using std::unordered_map;
-using std::list;
-using std::prev;
+using std::list;           // NOLINT
+using std::prev;           // NOLINT
+using std::unordered_map;  // NOLINT
 #endif
 
 namespace bustub {

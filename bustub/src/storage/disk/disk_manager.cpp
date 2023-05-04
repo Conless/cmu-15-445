@@ -30,7 +30,8 @@ static char *buffer_used;
  * Constructor: open/create a single database file & log file
  * @input db_file: database file name
  */
-DiskManager::DiskManager(const std::string &db_file, bool is_thread_safe) : file_name_(db_file), is_thread_safe_(is_thread_safe) {
+DiskManager::DiskManager(const std::string &db_file, bool is_thread_safe)
+    : file_name_(db_file), is_thread_safe_(is_thread_safe) {
   std::string::size_type n = file_name_.rfind('.');
   if (n == std::string::npos) {
     LOG_DEBUG("wrong file format");
@@ -126,10 +127,7 @@ void DiskManager::ReadPage(page_id_t page_id, char *page_data) {
   }
 }
 
-
-void DiskManager::FlushLog() {
-  log_io_.seekp(0);
-}
+void DiskManager::FlushLog() { log_io_.seekp(0); }
 
 /**
  * Write the contents of the log into disk file

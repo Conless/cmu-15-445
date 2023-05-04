@@ -32,9 +32,9 @@
 
 #ifdef REPLACE_STL
 #include "container/stl/vector.h"
-using sjtu::vector; // NOLINT
+using sjtu::vector;  // NOLINT
 #else
-using std::vector;
+using std::vector;  // NOLINT
 #endif
 
 namespace bustub {
@@ -174,8 +174,8 @@ class BPlusTree<KeyType, ValueType, KeyComparator, true> {
 
   auto GetValueInPage(const KeyType &key, vector<ValueType> *result, Context *ctx, const KeyComparator &comparator)
       -> bool;
-  auto GetValueInLeafPage(const KeyType &key, vector<ValueType> *result, Context *ctx,
-                          const KeyComparator &comparator) -> bool;
+  auto GetValueInLeafPage(const KeyType &key, vector<ValueType> *result, Context *ctx, const KeyComparator &comparator)
+      -> bool;
 
   auto RemoveInPage(const KeyType &key, Context *ctx, int index) -> std::pair<bool, KeyType>;
   auto RemoveInLeafPage(const KeyType &key, Context *ctx, int index) -> std::pair<bool, KeyType>;

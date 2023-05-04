@@ -9,9 +9,9 @@
 
 #ifdef REPLACE_STL
 #include "container/stl/vector.h"
-using sjtu::vector; // NOLINT
+using sjtu::vector;  // NOLINT
 #else
-using std::vector;
+using std::vector;  // NOLINT
 #endif
 
 namespace bustub {
@@ -19,7 +19,9 @@ namespace bustub {
 INDEX_TEMPLATE_ARGUMENTS
 class BPlusTreeIndex<KeyType, ValueType, KeyComparator, false> : public Index {
  public:
-  BPlusTreeIndex(const std::string &file_name, const KeyComparator &comparator, int leaf_max_size = LEAF_PAGE_SIZE, int internal_max_size = INTERNAL_PAGE_SIZE, int buffer_pool_size = BUFFER_POOL_SIZE, int replacer_k = LRUK_REPLACER_K);
+  BPlusTreeIndex(const std::string &file_name, const KeyComparator &comparator, int leaf_max_size = LEAF_PAGE_SIZE,
+                 int internal_max_size = INTERNAL_PAGE_SIZE, int buffer_pool_size = BUFFER_POOL_SIZE,
+                 int replacer_k = LRUK_REPLACER_K);
 
   ~BPlusTreeIndex() override;
 
@@ -37,7 +39,8 @@ class BPlusTreeIndex<KeyType, ValueType, KeyComparator, false> : public Index {
 
   void Search(const KeyType &key, vector<ValueType> *result, Transaction *transaction = nullptr);
 
-  void Search(const KeyType &key, vector<ValueType> *result, const KeyComparator &comparator, Transaction *transaction = nullptr);
+  void Search(const KeyType &key, vector<ValueType> *result, const KeyComparator &comparator,
+              Transaction *transaction = nullptr);
 
   auto GetBeginIterator() -> INDEXITERATOR_TYPE;
 

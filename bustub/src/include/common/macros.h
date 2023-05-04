@@ -49,9 +49,9 @@ namespace bustub {
   template class TypeName<StringIntKey<65>, int, StringIntComparator<65>>; /* NOLINT */ \
   }
 
-#define BUSTUB_NTS_DECLARE(TypeName)                                                       \
-  namespace bustub {                                                                       \
-  template class TypeName<StandardKey<int>, int, StandardComparator<int>, false>;    /* NOLINT */ \
+#define BUSTUB_NTS_DECLARE(TypeName)                                                           \
+  namespace bustub {                                                                           \
+  template class TypeName<StandardKey<int>, int, StandardComparator<int>, false>; /* NOLINT */ \
   template class TypeName<StringIntKey<65>, int, StringIntComparator<65>, false>; /* NOLINT */ \
   }
 

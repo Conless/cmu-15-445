@@ -33,7 +33,7 @@ BufferPoolManager::BufferPoolManager(size_t pool_size, DiskManager *disk_manager
 
   // Initially, every page is in the free list.
   for (size_t i = 0; i < pool_size_; ++i) {
-    free_list_.push_back(static_cast<int>(i)); // NOLINT
+    free_list_.push_back(static_cast<int>(i));  // NOLINT
   }
 }
 

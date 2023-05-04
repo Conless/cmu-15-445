@@ -17,12 +17,12 @@
 
 #ifdef REPLACE_STL
 namespace std {
-using iter = typename sjtu::list<std::pair<int, unsigned long>>::iterator; // NOLINT
-auto prev(iter it) { // NOLINT
+using iter = typename sjtu::list<std::pair<int, unsigned long>>::iterator;  // NOLINT
+auto prev(iter it) {                                                        // NOLINT
   return --it;
 }
 template <class Compare>
-auto upper_bound(iter first, iter last, std::pair<int, unsigned long> val, Compare comp) { // NOLINT
+auto upper_bound(iter first, iter last, std::pair<int, unsigned long> val, Compare comp) {  // NOLINT
   while (first != last) {
     if (*first > val) {
       break;
@@ -32,7 +32,7 @@ auto upper_bound(iter first, iter last, std::pair<int, unsigned long> val, Compa
   return first;
 }
 template <class Function>
-auto any_of(iter first, iter last, Function func) { // NOLINT
+auto any_of(iter first, iter last, Function func) {  // NOLINT
   while (first != last) {
     if (func(*first)) {
       return true;
@@ -108,7 +108,7 @@ void LRUKReplacer::RecordAccess(frame_id_t frame_id, [[maybe_unused]] AccessType
       }
     }
     curr_size_++;
-    temp_frame_list_.push_back(std::make_pair(frame_id, current_timestamp_)); // NOLINT
+    temp_frame_list_.push_back(std::make_pair(frame_id, current_timestamp_));  // NOLINT
     node.is_evictable_ = true;
     node.iter_ = std::prev(temp_frame_list_.end());
   }

@@ -59,7 +59,7 @@ class DiskManager {
   virtual void ReadPage(page_id_t page_id, char *page_data);
 
   virtual void FlushLog();
-  
+
   /**
    * Flush the entire log buffer into disk.
    * @param log_data raw log data

@@ -30,7 +30,7 @@
 using sjtu::list;           // NOLINT
 using sjtu::unordered_map;  // NOLINT
 #else
-using std::list;  // NOLINT
+using std::list;           // NOLINT
 using std::unordered_map;  // NOLINT
 #endif
 

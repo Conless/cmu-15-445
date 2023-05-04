@@ -38,8 +38,7 @@ BPLUSTREE_INDEX_NTS_TYPE::BPlusTreeIndex(const std::string &file_name, const Key
     disk_manager_->ReadLog(reinterpret_cast<char *>(&next_page_id), sizeof(page_id_t), 0);
     bpm_->SetNextPageId(next_page_id);
   }
-  container_ =
-      new BPLUSTREE_NTS_TYPE("index", HEADER_PAGE_ID, bpm_, comparator, leaf_max_size, internal_max_size);
+  container_ = new BPLUSTREE_NTS_TYPE("index", HEADER_PAGE_ID, bpm_, comparator, leaf_max_size, internal_max_size);
 }
 
 INDEX_TEMPLATE_ARGUMENTS
@@ -83,8 +82,8 @@ void BPLUSTREE_INDEX_NTS_TYPE::Search(const KeyType &key, vector<ValueType> *res
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-void BPLUSTREE_INDEX_NTS_TYPE::Search(const KeyType &key, vector<ValueType> *result,
-                                      const KeyComparator &comparator, Transaction *transaction) {
+void BPLUSTREE_INDEX_NTS_TYPE::Search(const KeyType &key, vector<ValueType> *result, const KeyComparator &comparator,
+                                      Transaction *transaction) {
   container_->GetValue(key, result, comparator, transaction);
 }
 

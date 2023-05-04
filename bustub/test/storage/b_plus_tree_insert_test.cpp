@@ -52,7 +52,7 @@ TEST(BPlusTreeTests, DISABLED_InsertTestCustom1) {
   for (auto key : keys) {
     int64_t value = key & 0xFFFFFFFF;
     rid.Set(static_cast<int32_t>(key >> 32), value);
-    index_key.ToBe(key / 5);
+    index_key.SetFromInteger(key / 5);
     tree.Insert(index_key, rid, transaction);
   }
   //   std::cout << tree.DrawBPlusTree() << std::endl;

@@ -4,9 +4,9 @@
 
 #ifdef REPLACE_STL
 #include "container/stl/vector.h"
-using sjtu::vector; // NOLINT
+using sjtu::vector;  // NOLINT
 #else
-using std::vector;
+using std::vector;  // NOLINT
 #endif
 
 namespace bustub {

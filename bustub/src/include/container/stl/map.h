@@ -901,7 +901,7 @@ class map : public RBTree<Key, T, Compare> {  // NOLINT
     }
     RBTree<Key, T, Compare>::erase(pos.ptr_->data_.first);
   }
-  void erase(const Key &key) { // NOLINT
+  void erase(const Key &key) {  // NOLINT
     RBTree<Key, T, Compare>::erase(key);
   }
 
