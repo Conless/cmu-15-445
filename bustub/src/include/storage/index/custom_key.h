@@ -12,8 +12,6 @@ namespace bustub {
 
 class Key {
  public:
-  Key() = default;
-  Key(const Key &other) = default;
   //   inline virtual void SetFromKey(const Tuple &tuple) { UNIMPLEMENTED("Key cannot be set from tuple."); }
   inline virtual void SetFromInteger(int64_t key) { UNIMPLEMENTED("Key cannot be set from integer."); }
   //   inline virtual auto ToValue(Schema *schema, uint32_t column_idx) -> Value { UNIMPLEMENTED("Key cannot be
@@ -32,9 +30,15 @@ template <typename KeyType>
 class StandardKey : public Key {
  public:
   StandardKey() = default;
-  StandardKey(const KeyType &data) : data_(data) {}  // NOLINT
-  StandardKey(const StandardKey &other) = default;
-  auto operator=(const StandardKey &other) -> StandardKey & = default;
+  explicit StandardKey(const KeyType &data) : data_(data) {}
+
+  StandardKey(const StandardKey<KeyType> &other) { data_ = other.data_; };
+  auto operator=(const StandardKey<KeyType> &other) -> StandardKey & {
+    data_ = other.data_;
+    return *this;
+  }
+
+ public:
   inline void SetFromInteger(int64_t key) override { data_ = static_cast<KeyType>(key); }
   inline auto ToString() const -> std::string override { return std::to_string(data_); }
   friend auto operator<<(std::ostream &os, const StandardKey &key) -> std::ostream & {
@@ -70,20 +74,33 @@ template <size_t Length>
 class StringKey : public Key {
  public:
   StringKey() { str_[0] = '\0'; }
+  StringKey(const StringKey &other) : StringKey(other.str_) {}
+  auto operator=(const StringKey &other) -> StringKey & {
+    for (size_t i = 0; i < Length; i++) {
+      str_[i] = other.str_[i];
+      if (other.str_[i] == '\0') {
+        break;
+      }
+    }
+    return *this;
+  }
+
+ public:
   explicit StringKey(const char *str) {
-    for (int i = 0; i < Length; i++) {
+    for (size_t i = 0; i < Length; i++) {
       str_[i] = str[i];
       if (str[i] == '\0') {
         return;
       }
     }
   }
-  explicit StringKey(const std::string &str) : StringKey(str.c_str()) { }
-  StringKey(const StringKey &x) : StringKey(x.str_) {}
+  explicit StringKey(const std::string &str) : StringKey(str.c_str()) {}
+
+ public:
   inline auto ToString() const -> std::string override { return std::string(str_); }
   auto Empty() const -> bool { return str_[0] == '\0'; }
   auto operator<(const StringKey<Length> &x) const -> bool {
-    for (int i = 0; i < Length; i++) {
+    for (size_t i = 0; i < Length; i++) {
       if (str_[i] != x.str_[i] || str_[i] == '\0') {
         return str_[i] < x.str_[i];
       }
@@ -91,7 +108,7 @@ class StringKey : public Key {
     return false;
   }
   auto operator==(const StringKey &x) const -> bool {
-    for (int i = 0; i < Length; i++) {
+    for (size_t i = 0; i < Length; i++) {
       if (str_[i] != x.str_[i]) {
         return false;
       }
@@ -118,17 +135,22 @@ enum ComparatorType { CompareData, CompareKey };
 template <size_t Length>
 class StringIntKey : public Key {
  public:
-  StringKey<Length> key_{};
-  int value_{};
   StringIntKey() = default;
+  StringIntKey(const StringIntKey &other) = default;
+  auto operator=(const StringIntKey &other) -> StringIntKey & {
+    key_ = other.key_;
+    value_ = other.value_;
+    return *this;
+  }
   StringIntKey(const StringKey<Length> &key, int value) : key_(key), value_(value) {}
   StringIntKey(const char *key, int value) : key_(key), value_(value) {}
   StringIntKey(const std::string &key, int value) : key_(key), value_(value) {}
   inline auto ToString() const -> std::string override {
-    return ("{" + std::string(key_) + "," + std::to_string(value_) + "}");
+    return ("{" + static_cast<std::string>(key_) + "," + std::to_string(value_) + "}");
   }
-  auto operator<(const StringIntKey &x) const -> bool { return key_ == x.key_ ? value_ < x.value_ : key_ < x.key_; }
-  auto operator>(const StringIntKey &x) const -> bool { return key_ == x.key_ ? value_ > x.value_ : key_ > x.key_; }
+  auto operator<(const StringIntKey<Length> &x) const -> bool {
+    return key_ == x.key_ ? value_ < x.value_ : key_ < x.key_;
+  }
   auto operator==(const StringIntKey &x) const -> bool { return key_ == x.key_ && value_ == x.value_; }
   friend auto operator<<(std::ostream &os, const StringIntKey &rhs) -> std::ostream & {
     return (os << '{' << rhs.key_ << ',' << rhs.value_ << '}');
@@ -136,6 +158,8 @@ class StringIntKey : public Key {
   friend auto operator>>(std::istream &is, const StringIntKey &rhs) -> std::istream & {
     return (is >> rhs.key_ >> rhs.value_);
   }
+  StringKey<Length> key_{};
+  int value_{};
 };
 
 template <size_t Length>
@@ -167,5 +191,8 @@ class StringIntComparator : public Comparator {
  private:
   ComparatorType type_;
 };
+
+template class StringIntKey<65>;
+template class StringIntComparator<65>;
 
 }  // namespace bustub

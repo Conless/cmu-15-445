@@ -141,8 +141,11 @@ auto BPLUSTREE_TYPE::GetValue(const KeyType &key, vector<ValueType> *result, con
   BUSTUB_ENSURE(result->empty(), "The result array should be empty.");
   Context ctx;
   ReadPageGuard root_guard = GetRootGuardRead();
+  if (!root_guard.Exist()) {
+    return false;
+  }
   ctx.read_set_.emplace_back(std::move(root_guard));
-  return GetValueInPage(key, result, &ctx, comparator_);
+  return GetValueInPage(key, result, &ctx, comparator);
 }
 
 INDEX_TEMPLATE_ARGUMENTS
@@ -150,7 +153,7 @@ auto BPLUSTREE_TYPE::GetValueInPage(const KeyType &key, vector<ValueType> *resul
                                     const KeyComparator &comparator) -> bool {
   auto cur_page = ctx->read_set_.back().As<BPlusTreePage>();
   if (cur_page->IsLeafPage()) {
-    return GetValueInLeafPage(key, result, ctx, comparator_);
+    return GetValueInLeafPage(key, result, ctx, comparator);
   }
   auto internal_page = reinterpret_cast<const InternalPage *>(cur_page);
   int next_search_index = internal_page->GetLastIndexL(key, comparator);
@@ -202,7 +205,7 @@ auto BPLUSTREE_TYPE::Insert(const KeyType &key, const ValueType &value, Transact
   Context ctx;
   WritePageGuard root_guard = GetRootGuardWrite(true);
   ctx.write_set_.emplace_back(std::move(root_guard));
-  if (InsertIntoPage(key, value, &ctx)) {
+  if (InsertIntoPage(key, value, &ctx, -1)) {
     WritePageGuard cur_guard = GetRootGuardWrite();
     auto cur_page = cur_guard.AsMut<BPlusTreePage>();
     if (cur_page->SizeExceeded()) {
@@ -361,8 +364,11 @@ auto BPLUSTREE_TYPE::Remove(const KeyType &key, Transaction *txn) -> bool {
   // Declaration of context instance.
   Context ctx;
   WritePageGuard root_guard = GetRootGuardWrite();
+  if (!root_guard.Exist()) {
+    return false;
+  }
   ctx.write_set_.emplace_back(std::move(root_guard));
-  auto res = RemoveInPage(key, &ctx);
+  auto res = RemoveInPage(key, &ctx, -1);
   if (res.first) {
     WritePageGuard cur_guard = GetRootGuardWrite();
     auto cur_page = cur_guard.AsMut<BPlusTreePage>();
@@ -503,6 +509,7 @@ auto BPLUSTREE_TYPE::CoalesceLeafPage(LeafPage *cur_page, InternalPage *last_pag
     if (size_sum <= leaf_max_size_) {
       next_leaf_page->CopyFirstNTo(next_leaf_page->GetSize(), cur_page);
       last_page->RemoveData(index + 1);
+      cur_page->SetNextPageId(next_leaf_page->GetNextPageId());
       //   bpm_->DeletePage(next_leaf_id);
       coalesced = true;
     }
@@ -515,6 +522,7 @@ auto BPLUSTREE_TYPE::CoalesceLeafPage(LeafPage *cur_page, InternalPage *last_pag
     if (size_sum <= leaf_max_size_) {
       cur_page->CopyFirstNTo(cur_page->GetSize(), last_leaf_page);
       last_page->RemoveData(index);
+      last_leaf_page->SetNextPageId(cur_page->GetNextPageId());
       //   bpm_->DeletePage(cur_page->);
       coalesced = true;
     }

@@ -135,6 +135,8 @@ class ReadPageGuard {
    */
   ~ReadPageGuard();
 
+  auto Exist() -> bool { return guard_.Exist(); }
+
   auto PageId() -> page_id_t { return guard_.PageId(); }
 
   auto GetData() -> const char * { return guard_.GetData(); }
@@ -194,6 +196,8 @@ class WritePageGuard {
    * as if you were dropping the guard.
    */
   ~WritePageGuard();
+
+  auto Exist() -> bool { return guard_.Exist(); }
 
   auto PageId() -> page_id_t { return guard_.PageId(); }
 
