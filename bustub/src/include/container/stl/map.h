@@ -154,7 +154,6 @@ class RBTree {
  public:
   auto insert(const value_type &value) -> std::pair<Tnode *, bool> {  // NOLINT
     Tnode *cur = rt_;
-    Tnode *next;
     if (cur == nullptr) {  // If the tree is empty
       // Create a new root node, with col = RED, size = 1 and no links to other node
       rt_ = cur = new Tnode(value, nullptr, BLACK, 1);

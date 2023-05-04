@@ -65,8 +65,12 @@ class vector {  // NOLINT
      * as well as operator-
      */
     iterator() : ptr_(nullptr) {}
-    iterator(T *ptr, const vector<T> *iter) : ptr_(ptr), iter_(iter) {}
-    iterator(const iterator &rhs) : ptr_(rhs.ptr_), iter_(rhs.iter_) {}
+    iterator(T *ptr, const vector<T> *iter) : iter_(iter), ptr_(ptr) {}
+    iterator(const iterator &rhs) : iter_(rhs.iter_), ptr_(rhs.ptr_) {}
+    auto operator=(const iterator &rhs) -> iterator & {
+      ptr_ = rhs.ptr_, iter_ = rhs.iter_;
+      return *this;
+    }
 
     auto operator+(const int &n) const -> iterator { return iterator(ptr_ + n, iter_); }
     auto operator-(const int &n) const -> iterator { return iterator(ptr_ - n, iter_); }
@@ -158,9 +162,9 @@ class vector {  // NOLINT
      * return a new iterator which pointer n-next elements
      * as well as operator-
      */
-    const_iterator(T *ptr, const vector<T> *iter) : ptr_(ptr), iter_(iter) {}
-    explicit const_iterator(const iterator &rhs) : ptr_(rhs.ptr_), iter_(rhs.iter_) {}
-    const_iterator(const const_iterator &rhs) : ptr_(rhs.ptr_), iter_(rhs.iter_) {}
+    const_iterator(T *ptr, const vector<T> *iter) : iter_(iter), ptr_(ptr) {}
+    explicit const_iterator(const iterator &rhs) : iter_(rhs.iter_), ptr_(rhs.ptr_) {}
+    const_iterator(const const_iterator &rhs) : iter_(rhs.iter_), ptr_(rhs.ptr_) {}
 
     auto operator+(const int &n) const -> const_iterator { return const_iterator(ptr_ + n, iter_); }
     auto operator-(const int &n) const -> const_iterator { return const_iterator(ptr_ - n, iter_); }
@@ -471,6 +475,8 @@ class vector {  // NOLINT
   iterator end_of_storage_;
   allocator_type alloc_;
 };
+
+template class vector<int>;
 
 template <>
 class vector<bustub::BasicPageGuard> {
