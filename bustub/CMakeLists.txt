@@ -106,45 +106,6 @@ else()
 endif()
 
 # #####################################################################################################################
-# MAIN TARGET
-# #####################################################################################################################
-
-set(CMAKE_CXX_FLAGS "-pthread -O3")
-
-set(SOURCE_CPPS
-    src/storage/disk/disk_manager.cpp
-
-    src/buffer/lru_k_replacer.cpp
-    src/buffer/buffer_pool_manager.cpp
-
-    src/storage/page/page_guard.cpp
-    src/storage/page/b_plus_tree_page.cpp
-    src/storage/page/b_plus_tree_internal_page.cpp
-    src/storage/page/b_plus_tree_leaf_page.cpp
-    src/storage/index/index_iterator.cpp
-    src/storage/index/b_plus_tree_nts.cpp
-    src/storage/index/b_plus_tree.cpp
-)
-
-file(GLOB_RECURSE TYPE_CPPS
-    "src/type/**.cpp"
-)
-
-set(BUSTUB_MAIN_TARGET_INCLUDE_DIR
-        ${PROJECT_SOURCE_DIR}/src/include
-        ${PROJECT_SOURCE_DIR}/test/include
-        ${PROJECT_SOURCE_DIR}/third_party
-        ${PROJECT_SOURCE_DIR}/third_party/fmt/include
-        ${PROJECT_SOURCE_DIR}/third_party/libpg_query/include
-        ${PROJECT_SOURCE_DIR}/third_party/argparse/include
-        ${PROJECT_SOURCE_DIR}/third_party/cpp_random_distributions
-)
-
-include_directories(${BUSTUB_MAIN_TARGET_INCLUDE_DIR})
-
-add_executable(code src/main.cpp ${SOURCE_CPPS})
-
-# #####################################################################################################################
 # COMPILER SETUP
 # #####################################################################################################################
 if(NOT DEFINED BUSTUB_SANITIZER)

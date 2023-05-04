@@ -257,14 +257,15 @@ auto B_PLUS_TREE_INTERNAL_PAGE_TYPE::RemoveData(int index) -> MappingType {
 #include "storage/index/custom_key.h"
 BUSTUB_INTERNAL_DECLARE(BPlusTreeInternalPage)
 #else
-#define BUSTUB_INTERNAL_DECLARE(TypeName)
-namespace bustub { \
+#ifndef BUSTUB_INTERNAL_DECLARE
+#define BUSTUB_INTERNAL_DECLARE(TypeName)                                                 \
+  namespace bustub {                                                                      \
   template class TypeName<GenericKey<4>, page_id_t, GenericComparator<4>>;   /* NOLINT */ \
   template class TypeName<GenericKey<8>, page_id_t, GenericComparator<8>>;   /* NOLINT */ \
   template class TypeName<GenericKey<16>, page_id_t, GenericComparator<16>>; /* NOLINT */ \
   template class TypeName<GenericKey<32>, page_id_t, GenericComparator<32>>; /* NOLINT */ \
   template class TypeName<GenericKey<64>, page_id_t, GenericComparator<64>>; /* NOLINT */ \
-}
-BUSTUB_DECLARE(BPlusTreeInternalPage)
+  }
 #endif
-
+BUSTUB_INTERNAL_DECLARE(BPlusTreeInternalPage)
+#endif

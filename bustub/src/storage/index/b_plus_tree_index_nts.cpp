@@ -105,13 +105,15 @@ auto BPLUSTREE_INDEX_NTS_TYPE::GetEndIterator() -> INDEXITERATOR_TYPE { return c
 #include "storage/index/custom_key.h"
 BUSTUB_NTS_DECLARE(BPlusTreeIndex)
 #else
-#define BUSTUB_DECLARE(TypeName)
-namespace bustub {
-template class TypeName<GenericKey<4>, RID, GenericComparator<4> >;   /* NOLINT */
-template class TypeName<GenericKey<8>, RID, GenericComparator<8> >;   /* NOLINT */
-template class TypeName<GenericKey<16>, RID, GenericComparator<16> >; /* NOLINT */
-template class TypeName<GenericKey<32>, RID, GenericComparator<32> >; /* NOLINT */
-template class TypeName<GenericKey<64>, RID, GenericComparator<64> >; /* NOLINT */
-}  // namespace bustub
-BUSTUB_DECLARE(BPlusTreeIndex)
+#ifndef BUSTUB_NTS_DECALRE
+#define BUSTUB_NTS_DECLARE(TypeName)                                                 \
+  namespace bustub {                                                                 \
+  template class TypeName<GenericKey<4>, RID, GenericComparator<4> >;   /* NOLINT */ \
+  template class TypeName<GenericKey<8>, RID, GenericComparator<8> >;   /* NOLINT */ \
+  template class TypeName<GenericKey<16>, RID, GenericComparator<16> >; /* NOLINT */ \
+  template class TypeName<GenericKey<32>, RID, GenericComparator<32> >; /* NOLINT */ \
+  template class TypeName<GenericKey<64>, RID, GenericComparator<64> >; /* NOLINT */ \
+  }                                                                     // namespace bustub
+#endif
+BUSTUB_NTS_DECLARE(BPlusTreeIndex)
 #endif

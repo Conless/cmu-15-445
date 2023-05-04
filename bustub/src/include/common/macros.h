@@ -41,6 +41,8 @@ namespace bustub {
   DISALLOW_COPY(cname);               \
   DISALLOW_MOVE(cname);
 
+#ifdef CUSTOMIZED_BUSTUB
+
 #define BUSTUB_DECLARE(TypeName)                                                        \
   namespace bustub {                                                                    \
   template class TypeName<StandardKey<int>, int, StandardComparator<int>>; /* NOLINT */ \
@@ -58,5 +60,7 @@ namespace bustub {
   template class TypeName<StandardKey<int>, page_id_t, StandardComparator<int>>; /* NOLINT */ \
   template class TypeName<StringIntKey<65>, page_id_t, StringIntComparator<65>>; /* NOLINT */ \
   }
+
+#endif
 
 }  // namespace bustub

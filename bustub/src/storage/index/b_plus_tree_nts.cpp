@@ -815,6 +815,7 @@ auto BPLUSTREE_NTS_TYPE::ToPrintableBPlusTree(page_id_t root_id) -> PrintableBPl
 #include "storage/index/custom_key.h"
 BUSTUB_NTS_DECLARE(BPlusTree)
 #else
+#ifndef BUSTUB_NTS_DECLARE
 #define BUSTUB_NTS_DECLARE(TypeName)                                                       \
   namespace bustub {                                                                       \
   template class TypeName<GenericKey<4>, RID, GenericComparator<4>, false>;   /* NOLINT */ \
@@ -823,5 +824,6 @@ BUSTUB_NTS_DECLARE(BPlusTree)
   template class TypeName<GenericKey<32>, RID, GenericComparator<32>, false>; /* NOLINT */ \
   template class TypeName<GenericKey<64>, RID, GenericComparator<64>, false>; /* NOLINT */ \
   }                                                                           // namespace bustub
+#endif
 BUSTUB_NTS_DECLARE(BPlusTree)
 #endif
