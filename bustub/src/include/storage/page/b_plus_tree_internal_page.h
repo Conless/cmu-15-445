@@ -160,8 +160,11 @@ class BPlusTreeInternalPage : public BPlusTreePage {
       } else {
         kstr.append(",");
       }
-
-      kstr.append(std::to_string(key.ToString()));
+#ifndef CUSTOMIZED_BUSTUB
+      kstr.append(to_string(key.ToString()));
+#else
+      kstr.append(key.ToString());
+#endif
     }
     kstr.append(")");
 

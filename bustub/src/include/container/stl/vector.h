@@ -486,6 +486,11 @@ class vector<bustub::BasicPageGuard> {
   void pop_back() { delete data_[tail_--]; }                               // NOLINT
   auto back() -> T & { return *data_[tail_]; }                             // NOLINT
   auto empty() -> bool { return tail_ == 0; }                              // NOLINT
+  void clear() {                                                           // NOLINT
+    while (tail_ != 0) {
+      delete data_[tail_--];
+    }
+  }
 
  private:
   T *data_[1000];
