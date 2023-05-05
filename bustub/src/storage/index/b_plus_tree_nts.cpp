@@ -141,10 +141,10 @@ auto BPLUSTREE_NTS_TYPE::GetValueInPage(const KeyType &key, vector<ValueType> *r
   auto internal_page = reinterpret_cast<const InternalPage *>(cur_page);
   int next_search_index = internal_page->GetLastIndexL(key, comparator);
   page_id_t next_page_id = internal_page->ValueAt(next_search_index);
+  ctx->basic_set_.pop_back();
   auto next_guard = bpm_->FetchPageBasic(next_page_id);
   ctx->basic_set_.push_back(std::move(next_guard));
   bool res = GetValueInPage(key, result, ctx, comparator);
-  ctx->basic_set_.pop_back();
   return res;
 }
 
