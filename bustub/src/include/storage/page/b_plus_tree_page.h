@@ -58,6 +58,8 @@ class BPlusTreePage {
 
   auto SizeExceeded() const -> bool;
   auto SizeNotEnough() const -> bool;
+  auto IsInsertSafe() const -> bool;
+  auto IsRemoveSafe() const -> bool;
 
  private:
   // member variable, attributes that both internal and leaf page share

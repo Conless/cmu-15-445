@@ -188,7 +188,7 @@ auto BPLUSTREE_NTS_TYPE::Insert(const KeyType &key, const ValueType &value, Tran
   BasicContext ctx;
   BasicPageGuard root_guard = GetRootGuard(true);
   ctx.basic_set_.push_back(std::move(root_guard));
-  if (InsertIntoPage(key, value, &ctx, -1)) {
+  if (InsertIntoPage(key, value, &ctx, -1).first) {
     BasicPageGuard cur_guard = GetRootGuard();
     auto cur_page = cur_guard.AsMut<BPlusTreePage>();
     if (cur_page->SizeExceeded()) {
@@ -211,7 +211,7 @@ auto BPLUSTREE_NTS_TYPE::Insert(const KeyType &key, const ValueType &value, Tran
 
 INDEX_TEMPLATE_ARGUMENTS
 auto BPLUSTREE_NTS_TYPE::InsertIntoPage(const KeyType &key, const ValueType &value, BasicContext *ctx, int index)
-    -> bool {
+    -> std::pair<bool, bool> {
   auto cur_page = ctx->basic_set_.back().AsMut<BPlusTreePage>();
   if (cur_page->IsLeafPage()) {
     return InsertIntoLeafPage(key, value, ctx, index);
@@ -219,9 +219,20 @@ auto BPLUSTREE_NTS_TYPE::InsertIntoPage(const KeyType &key, const ValueType &val
   auto internal_page = reinterpret_cast<InternalPage *>(cur_page);
   int next_insert_index = internal_page->GetLastIndexLE(key, comparator_);
   page_id_t next_page_id = internal_page->ValueAt(next_insert_index);
+  bool insert_safe_tag = internal_page->IsInsertSafe();
+  if (insert_safe_tag) {
+    BasicPageGuard cur_guard = std::move(ctx->basic_set_.back());
+    ctx->basic_set_.clear();
+    ctx->basic_set_.push_back(std::move(cur_guard));
+  }
   auto next_guard = bpm_->FetchPageBasic(next_page_id);
   ctx->basic_set_.push_back(std::move(next_guard));
-  if (InsertIntoPage(key, value, ctx, next_insert_index)) {
+  auto insert_res = InsertIntoPage(key, value, ctx, next_insert_index);
+  if (!insert_res.first) {
+    BUSTUB_ENSURE(ctx->basic_set_.empty(), "Write set should be cleared.")
+    return {false, true};
+  }
+  if (!insert_res.second) {
     BasicPageGuard cur_guard = std::move(ctx->basic_set_.back());
     ctx->basic_set_.pop_back();
     if (internal_page->SizeExceeded() && !ctx->basic_set_.empty()) {
@@ -229,18 +240,23 @@ auto BPLUSTREE_NTS_TYPE::InsertIntoPage(const KeyType &key, const ValueType &val
       if (!ShiftInternalPage(internal_page, last_page, index)) {
         SplitInternalPage(internal_page, last_page);
       }
+    } else {
+      ctx->basic_set_.clear();
+      insert_safe_tag = true;
     }
-    return true;
   }
-  ctx->basic_set_.pop_back();
-  return false;
+  return {insert_res.first, insert_safe_tag | insert_res.second};
 }
 
 INDEX_TEMPLATE_ARGUMENTS
 auto BPLUSTREE_NTS_TYPE::InsertIntoLeafPage(const KeyType &key, const ValueType &value, BasicContext *ctx, int index)
-    -> bool {
+    -> std::pair<bool, bool> {
   auto leaf_page = ctx->basic_set_.back().AsMut<LeafPage>();
-  bool res = leaf_page->InsertData(key, value, comparator_) != -1;
+  bool insert_res = leaf_page->InsertData(key, value, comparator_) != -1;
+  if (!insert_res) {
+    ctx->basic_set_.clear();
+    return {false, true};
+  }
   BasicPageGuard cur_guard = std::move(ctx->basic_set_.back());
   ctx->basic_set_.pop_back();
   if (leaf_page->SizeExceeded() && !ctx->basic_set_.empty()) {
@@ -248,8 +264,10 @@ auto BPLUSTREE_NTS_TYPE::InsertIntoLeafPage(const KeyType &key, const ValueType 
     if (!ShiftLeafPage(leaf_page, last_page, index)) {
       SplitLeafPage(leaf_page, last_page);
     }
+    return {true, false};
   }
-  return res;
+  ctx->basic_set_.clear();
+  return {true, true};
 }
 
 INDEX_TEMPLATE_ARGUMENTS

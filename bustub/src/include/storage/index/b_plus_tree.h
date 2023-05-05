@@ -133,9 +133,9 @@ class BPlusTree<KeyType, ValueType, KeyComparator, true> {
 
   /** Insert operation and utils functions  */
   // Insert data into current internal page, stored in back of ctx->write_set.
-  auto InsertIntoPage(const KeyType &key, const ValueType &value, Context *ctx, int index) -> bool;
+  auto InsertIntoPage(const KeyType &key, const ValueType &value, Context *ctx, int index) -> std::pair<bool, bool>;
   // Insert data into current leaf page, stored in back of ctx->write_set.
-  auto InsertIntoLeafPage(const KeyType &key, const ValueType &value, Context *ctx, int index) -> bool;
+  auto InsertIntoLeafPage(const KeyType &key, const ValueType &value, Context *ctx, int index) -> std::pair<bool, bool>;
   // Shift data between leaf page, i.e. send some data away from current page.
   auto ShiftLeafPage(LeafPage *cur_page, InternalPage *last_page, int index) -> bool;
   // Shift data between internal page, i.e. send some data away from current page.
