@@ -40,14 +40,14 @@ class IndexIterator {
     if (IsEnd()) {
       return itr.IsEnd();
     }
-    return (bpm_ == itr.bpm_) && (page_id_ == itr.page_id_);
+    return (bpm_ == itr.bpm_) && (page_id_ == itr.page_id_) && (this->index_in_page_ == itr.index_in_page_);
   }
 
   auto operator!=(const IndexIterator &itr) const -> bool { return !(*this == itr); }
 
  private:
   // add your own private member variables here
-  BasicPageGuard page_guard_;
+  const LeafPage *cur_page_;
   page_id_t page_id_;
   int index_in_page_;
   BufferPoolManager *bpm_;
