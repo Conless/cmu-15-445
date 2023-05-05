@@ -453,9 +453,7 @@ auto BPLUSTREE_TYPE::RemoveInPage(const KeyType &key, Context *ctx, int index) -
     }
     if (internal_page->SizeNotEnough() && !ctx->write_set_.empty()) {
       auto last_page = ctx->write_set_.back().AsMut<InternalPage>();
-      if (internal_page->GetSize() == 0) {
-        last_page->RemoveData(index);
-      } else if (!ReplenishInternalPage(internal_page, last_page, index)) {
+      if (!ReplenishInternalPage(internal_page, last_page, index)) {
         CoalesceInternalPage(internal_page, last_page, index);
       }
     }
@@ -471,18 +469,16 @@ auto BPLUSTREE_TYPE::RemoveInLeafPage(const KeyType &key, Context *ctx, int inde
     return {false, KeyType()};
   }
   std::pair<bool, KeyType> res = {true, KeyType()};
-  if (remove_index == 0 && leaf_page->GetSize() != 0) {
-    res.second = leaf_page->KeyAt(remove_index);
-  }
   WritePageGuard cur_guard = std::move(ctx->write_set_.back());
   ctx->write_set_.pop_back();
   if (leaf_page->SizeNotEnough() && !ctx->write_set_.empty()) {
     auto last_page = ctx->write_set_.back().AsMut<InternalPage>();
-    if (leaf_page->GetSize() == 0) {
-      last_page->RemoveData(index);
-    } else if (!ReplenishLeafPage(leaf_page, last_page, index)) {
+    if (!ReplenishLeafPage(leaf_page, last_page, index)) {
       CoalesceLeafPage(leaf_page, last_page, index);
     }
+  }
+  if (remove_index == 0 && leaf_page->GetSize() != 0) {
+    res.second = leaf_page->KeyAt(remove_index);
   }
   return res;
 }
