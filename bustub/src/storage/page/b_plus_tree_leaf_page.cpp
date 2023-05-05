@@ -108,7 +108,7 @@ auto B_PLUS_TREE_LEAF_PAGE_TYPE::GetIndexE(const KeyType &key, const KeyComparat
 INDEX_TEMPLATE_ARGUMENTS
 auto B_PLUS_TREE_LEAF_PAGE_TYPE::KeyAt(int index) const -> const KeyType & {
   if (index < 0 || index >= GetSize()) {
-    throw Exception(ExceptionType::OUT_OF_RANGE, "index out of range");
+    throw Exception(ExceptionType::OUT_OF_RANGE, "index out of range in leaf");
   }
   return (array_ + index)->first;
 }
@@ -116,7 +116,7 @@ auto B_PLUS_TREE_LEAF_PAGE_TYPE::KeyAt(int index) const -> const KeyType & {
 INDEX_TEMPLATE_ARGUMENTS
 void B_PLUS_TREE_LEAF_PAGE_TYPE::SetKeyAt(int index, const KeyType &key) {
   if (index < 0 || index >= GetSize()) {
-    throw Exception(ExceptionType::OUT_OF_RANGE, "index out of range");
+    throw Exception(ExceptionType::OUT_OF_RANGE, "index out of range in leaf");
   }
   (array_ + index)->first = key;
 }
@@ -128,7 +128,7 @@ void B_PLUS_TREE_LEAF_PAGE_TYPE::SetKeyAt(int index, const KeyType &key) {
 INDEX_TEMPLATE_ARGUMENTS
 auto B_PLUS_TREE_LEAF_PAGE_TYPE::ValueAt(int index) const -> const ValueType & {
   if (index < 0 || index >= GetSize()) {
-    throw Exception(ExceptionType::OUT_OF_RANGE, "index out of range");
+    throw Exception(ExceptionType::OUT_OF_RANGE, "index out of range in leaf");
   }
   return (array_ + index)->second;
 }
@@ -136,7 +136,7 @@ auto B_PLUS_TREE_LEAF_PAGE_TYPE::ValueAt(int index) const -> const ValueType & {
 INDEX_TEMPLATE_ARGUMENTS
 void B_PLUS_TREE_LEAF_PAGE_TYPE::SetValueAt(int index, const ValueType &value) {
   if (index < 0 || index >= GetSize()) {
-    throw Exception(ExceptionType::OUT_OF_RANGE, "index out of range");
+    throw Exception(ExceptionType::OUT_OF_RANGE, "index out of range in leaf");
   }
   (array_ + index)->second = value;
 }
@@ -144,7 +144,8 @@ void B_PLUS_TREE_LEAF_PAGE_TYPE::SetValueAt(int index, const ValueType &value) {
 INDEX_TEMPLATE_ARGUMENTS
 auto B_PLUS_TREE_LEAF_PAGE_TYPE::DataAt(int index) const -> const MappingType & {
   if (index < 0 || index >= GetSize()) {
-    throw Exception(ExceptionType::OUT_OF_RANGE, "index out of range");
+    std::cout << "size: " << GetSize() << '\n';
+    throw Exception(ExceptionType::OUT_OF_RANGE, "index out of range in leaf");
   }
   return *(array_ + index);
 }
@@ -152,7 +153,7 @@ auto B_PLUS_TREE_LEAF_PAGE_TYPE::DataAt(int index) const -> const MappingType & 
 INDEX_TEMPLATE_ARGUMENTS
 void B_PLUS_TREE_LEAF_PAGE_TYPE::SetDataAt(int index, const KeyType &key, const ValueType &value) {
   if (index < 0 || index >= GetSize()) {
-    throw Exception(ExceptionType::OUT_OF_RANGE, "index out of range");
+    throw Exception(ExceptionType::OUT_OF_RANGE, "index out of range in leaf");
   }
   (array_ + index)->first = key;
   (array_ + index)->second = value;

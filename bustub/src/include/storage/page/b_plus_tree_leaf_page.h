@@ -140,7 +140,7 @@ class BPlusTreeLeafPage : public BPlusTreePage {
         kstr.append(",");
       }
 #ifndef CUSTOMIZED_BUSTUB
-      kstr.append(to_string(key.ToString()));
+      kstr.append(std::to_string(key.ToString()));
 #else
       kstr.append(key.ToString());
 #endif

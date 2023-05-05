@@ -127,11 +127,14 @@ class BPlusTree<KeyType, ValueType, KeyComparator, true> {
   void SetNewRoot(page_id_t new_root_id, BPlusTreeHeaderPage *header_page);
 
   // Get the root write guard, with the read guard of HeaderPage required.
-  auto GetRootGuardWrite(bool create_new_root = false) -> WritePageGuard;
+  auto GetRootGuardWrite(Context *ctx, bool create_new_root = false) -> WritePageGuard;
+  // Fetch the root write guard from the given context.
+  auto FetchRootGuardWrite(Context *ctx) -> WritePageGuard;
   // Get the root read guard, with the read guard of HeaderPage required.
   auto GetRootGuardRead() -> ReadPageGuard;
 
   /** Insert operation and utils functions  */
+  auto InsertOptimistic(const KeyType &key, const ValueType &value) -> std::pair<bool, bool>;
   // Insert data into current internal page, stored in back of ctx->write_set.
   auto InsertIntoPage(const KeyType &key, const ValueType &value, Context *ctx, int index) -> std::pair<bool, bool>;
   // Insert data into current leaf page, stored in back of ctx->write_set.
