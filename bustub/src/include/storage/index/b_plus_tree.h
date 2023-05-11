@@ -117,23 +117,19 @@ class BPlusTree<KeyType, ValueType, KeyComparator, true> {
   /** Create, reset and get root operations */
   // Create a new page with the given page type.
   auto CreateNewPage(IndexPageType page_type) -> page_id_t;
-  // Create a new root with the given page type, with the write guard of HeaderPage required.
-  auto CreateNewRoot(IndexPageType page_type) -> page_id_t;
   // Create a new root with the given page type by header page.
   auto CreateNewRoot(IndexPageType page_type, BPlusTreeHeaderPage *header_page) -> page_id_t;
-  // Set root id to new root id, with write guard of HeaderPage required.
-  void SetNewRoot(page_id_t new_root_id);
   // Set root id to new root id by the given header page.
   void SetNewRoot(page_id_t new_root_id, BPlusTreeHeaderPage *header_page);
-
   // Get the root write guard, with the read guard of HeaderPage required.
   auto GetRootGuardWrite(Context *ctx, bool create_new_root = false) -> WritePageGuard;
   // Fetch the root write guard from the given context.
   auto FetchRootGuardWrite(Context *ctx) -> WritePageGuard;
   // Get the root read guard, with the read guard of HeaderPage required.
-  auto GetRootGuardRead() -> ReadPageGuard;
+  auto GetRootGuardRead() const -> ReadPageGuard;
 
   /** Insert operation and utils functions  */
+  // Insert data optimistically into leaf, assuming that only leaf page will be edited
   auto InsertOptimistic(const KeyType &key, const ValueType &value) -> std::pair<bool, bool>;
   // Insert data into current internal page, stored in back of ctx->write_set.
   auto InsertIntoPage(const KeyType &key, const ValueType &value, Context *ctx, int index) -> std::pair<bool, bool>;
