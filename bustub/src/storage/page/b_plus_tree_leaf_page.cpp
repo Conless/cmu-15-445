@@ -245,7 +245,7 @@ auto B_PLUS_TREE_LEAF_PAGE_TYPE::RemoveData(int index) -> MappingType {
 }  // namespace bustub
 
 #ifdef CUSTOMIZED_BUSTUB
-#include "storage/index/custom_key.h"
+#include "container/custom_key.h"
 BUSTUB_DECLARE(BPlusTreeLeafPage)
 #else
 #ifndef BUSTUB_DECLARE

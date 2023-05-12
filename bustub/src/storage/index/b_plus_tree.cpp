@@ -1242,7 +1242,7 @@ auto BPLUSTREE_TYPE::ToPrintableBPlusTree(page_id_t root_id) -> PrintableBPlusTr
 }  // namespace bustub
 
 #ifdef CUSTOMIZED_BUSTUB
-#include "storage/index/custom_key.h"
+#include "container/custom_key.h"
 BUSTUB_DECLARE(BPlusTree)
 #else
 #ifndef BUSTUB_DECLARE

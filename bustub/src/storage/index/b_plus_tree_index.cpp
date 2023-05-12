@@ -98,7 +98,7 @@ auto BPLUSTREE_INDEX_TYPE::GetEndIterator() -> INDEXITERATOR_TYPE { return conta
 }  // namespace bustub
 
 #ifdef CUSTOMIZED_BUSTUB
-#include "storage/index/custom_key.h"
+#include "container/custom_key.h"
 BUSTUB_DECLARE(BPlusTreeIndex)
 #else
 #ifndef BUSTUB_DECLARE

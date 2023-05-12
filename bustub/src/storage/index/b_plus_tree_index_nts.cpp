@@ -109,7 +109,7 @@ auto BPLUSTREE_INDEX_NTS_TYPE::GetEndIterator() -> INDEXITERATOR_TYPE { return c
 }  // namespace bustub
 
 #ifdef CUSTOMIZED_BUSTUB
-#include "storage/index/custom_key.h"
+#include "container/custom_key.h"
 BUSTUB_NTS_DECLARE(BPlusTreeIndex)
 #else
 #ifndef BUSTUB_NTS_DECALRE
