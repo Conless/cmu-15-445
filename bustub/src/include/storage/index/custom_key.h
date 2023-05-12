@@ -19,13 +19,6 @@ class Key {
   inline virtual auto ToString() const -> std::string { UNIMPLEMENTED("Key cannot be converted to string."); }
 };
 
-class Comparator {
- public:
-  Comparator() = default;
-  //   explicit Comparator(Schema *key_schema)  { UNIMPLEMENTED("Standard comparator cannot be constructed from
-  //   schema."); }
-};
-
 template <typename KeyType>
 class StandardKey : public Key {
  public:
@@ -39,6 +32,23 @@ class StandardKey : public Key {
   }
 
  public:
+  class Comparator {
+   public:
+    Comparator() = delete;
+    Comparator(const Comparator &) = default;
+    Comparator(Comparator &&) noexcept = default;
+    inline auto operator()(const StandardKey<KeyType> &lhs, const StandardKey<KeyType> &rhs) const -> int {
+      if (lhs.data_ < rhs.data_) {
+        return -1;
+      }
+      if (rhs.data_ < lhs.data_) {
+        return 1;
+      }
+      return 0;
+    }
+  };
+
+ public:
   inline void SetFromInteger(int64_t key) override { data_ = static_cast<KeyType>(key); }
   inline auto ToString() const -> std::string override { return std::to_string(data_); }
   friend auto operator<<(std::ostream &os, const StandardKey &key) -> std::ostream & {
@@ -46,23 +56,6 @@ class StandardKey : public Key {
     return os;
   }
   KeyType data_;
-};
-
-template <typename KeyType>
-class StandardComparator : public Comparator {
- public:
-  StandardComparator() = delete;
-  StandardComparator(const StandardComparator &) = default;
-  StandardComparator(StandardComparator &&) noexcept = default;
-  inline auto operator()(const StandardKey<KeyType> &lhs, const StandardKey<KeyType> &rhs) const -> int {
-    if (lhs.data_ < rhs.data_) {
-      return -1;
-    }
-    if (rhs.data_ < lhs.data_) {
-      return 1;
-    }
-    return 0;
-  }
 };
 
 /**
@@ -86,7 +79,7 @@ class StringKey : public Key {
   }
 
  public:
-  explicit StringKey(const char *str) {
+  StringKey(const char *str) { // NOLINT
     for (size_t i = 0; i < Length; i++) {
       str_[i] = str[i];
       if (str[i] == '\0') {
@@ -99,25 +92,34 @@ class StringKey : public Key {
  public:
   inline auto ToString() const -> std::string override { return std::string(str_); }
   auto Empty() const -> bool { return str_[0] == '\0'; }
-  auto operator<(const StringKey<Length> &x) const -> bool {
+  friend auto operator<(const StringKey<Length> &lhs, const StringKey<Length> &rhs) -> bool {
     for (size_t i = 0; i < Length; i++) {
-      if (str_[i] != x.str_[i] || str_[i] == '\0') {
-        return str_[i] < x.str_[i];
+      if (lhs.str_[i] != rhs.str_[i] || lhs.str_[i] == '\0') {
+        return lhs.str_[i] < rhs.str_[i];
       }
     }
     return false;
   }
-  auto operator==(const StringKey &x) const -> bool {
+  friend auto operator>(const StringKey<Length> &lhs, const StringKey<Length> &rhs) -> bool {
     for (size_t i = 0; i < Length; i++) {
-      if (str_[i] != x.str_[i]) {
+      if (lhs.str_[i] != rhs.str_[i] || lhs.str_[i] == '\0') {
+        return lhs.str_[i] > rhs.str_[i];
+      }
+    }
+    return false;
+  }
+  friend auto operator==(const StringKey &lhs, const StringKey &rhs) -> bool {
+    for (size_t i = 0; i < Length; i++) {
+      if (lhs.str_[i] != rhs.str_[i]) {
         return false;
       }
-      if (str_[i] == '\0') {
+      if (lhs.str_[i] == '\0') {
         return true;
       }
     }
     return true;
   }
+  friend auto operator!=(const StringKey<Length> &lhs, const StringKey<Length> &rhs) -> bool { return !(lhs == rhs); }
   explicit operator std::string() const { return std::string(str_); }
   friend auto operator<<(std::ostream &os, const StringKey &rhs) -> std::ostream & { return (os << rhs.str_); }
   friend auto operator>>(std::istream &is, const StringKey &rhs) -> std::istream & { return (is >> rhs.str_); }
@@ -126,73 +128,66 @@ class StringKey : public Key {
   char str_[Length];
 };
 
-enum ComparatorType { CompareData, CompareKey };
-
+enum ComparatorType { CompareFirst, CompareBoth };
 /**
- * @brief Class DataType
+ * @brief Class PairKey
  * @details Package the pair of key and value, enable assignment and comparison.
- */
-template <size_t Length>
-class StringIntKey : public Key {
+ */ 
+template <typename T1, typename T2>
+class PairKey : public Key {
  public:
-  StringIntKey() = default;
-  StringIntKey(const StringIntKey &other) = default;
-  auto operator=(const StringIntKey &other) -> StringIntKey & {
-    key_ = other.key_;
-    value_ = other.value_;
+  PairKey() = default;
+  PairKey(const PairKey &other) : first_(other.first_), second_(other.second_) {}
+  PairKey(const T1 &first, const T2 &second) : first_(first), second_(second) {}
+  auto operator=(const PairKey<T1, T2> &other) -> PairKey & {
+    first_ = other.first_;
+    second_ = other.second_;
     return *this;
   }
-  StringIntKey(const StringKey<Length> &key, int value) : key_(key), value_(value) {}
-  StringIntKey(const char *key, int value) : key_(key), value_(value) {}
-  StringIntKey(const std::string &key, int value) : key_(key), value_(value) {}
-  inline auto ToString() const -> std::string override {
-    return ("{" + static_cast<std::string>(key_) + "," + std::to_string(value_) + "}");
-  }
-  auto operator<(const StringIntKey<Length> &x) const -> bool {
-    return key_ == x.key_ ? value_ < x.value_ : key_ < x.key_;
-  }
-  auto operator==(const StringIntKey &x) const -> bool { return key_ == x.key_ && value_ == x.value_; }
-  friend auto operator<<(std::ostream &os, const StringIntKey &rhs) -> std::ostream & {
-    return (os << '{' << rhs.key_ << ',' << rhs.value_ << '}');
-  }
-  friend auto operator>>(std::istream &is, const StringIntKey &rhs) -> std::istream & {
-    return (is >> rhs.key_ >> rhs.value_);
-  }
-  StringKey<Length> key_{};
-  int value_{};
-};
 
-template <size_t Length>
-class StringIntComparator : public Comparator {
  public:
-  StringIntComparator() = delete;
-  explicit StringIntComparator(ComparatorType type) : type_(type) {}
-  StringIntComparator(const StringIntComparator &) = default;
-  StringIntComparator(StringIntComparator &&other) noexcept { type_ = other.type_; }
-  inline auto operator()(const StringIntKey<Length> &lhs, const StringIntKey<Length> &rhs) const -> int {
-    if (type_ == CompareKey) {
-      if (lhs.key_ < rhs.key_) {
+  inline auto ToString() const -> std::string override {
+    return ("{" + static_cast<std::string>(first_) + "," + std::to_string(second_) + "}");
+  }
+  friend auto operator==(const PairKey<T1, T2> &lhs, const PairKey<T1, T2> &rhs) -> bool { return lhs.first_ == rhs.first_ && lhs.second_ == rhs.second_; }
+  friend auto operator<<(std::ostream &os, const PairKey<T1, T2> &rhs) -> std::ostream & {
+    return (os << '{' << rhs.first_ << ',' << rhs.second_ << '}');
+  }
+
+ public:
+  class Comparator {
+   public:
+    explicit Comparator(ComparatorType type = CompareBoth) : type_(type) {}
+    Comparator(const Comparator &) = default;
+    Comparator(Comparator &&other) noexcept { type_ = other.type_; }
+    inline auto operator()(const PairKey<T1, T2> &lhs, const PairKey<T1, T2> &rhs) const -> int {
+      if (type_ == CompareFirst || lhs.first_ != rhs.first_) {
+        if (lhs.first_ < rhs.first_) {
+          return -1;
+        }
+        if (rhs.first_ < lhs.first_) {
+          return 1;
+        }
+        return 0;
+      }
+      if (lhs.second_ < rhs.second_) {
         return -1;
       }
-      if (rhs.key_ < lhs.key_) {
+      if (rhs.second_ < lhs.second_) {
         return 1;
       }
       return 0;
     }
-    if (lhs < rhs) {
-      return -1;
-    }
-    if (rhs < lhs) {
-      return 1;
-    }
-    return 0;
-  }
 
- private:
-  ComparatorType type_;
+   private:
+    ComparatorType type_;
+  };
+
+ public:
+  T1 first_{};
+  T2 second_{};
 };
 
-template class StringIntKey<65>;
-template class StringIntComparator<65>;
+template class PairKey<StringKey<65>, int>;
 
 }  // namespace bustub

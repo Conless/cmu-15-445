@@ -43,22 +43,23 @@ namespace bustub {
 
 #ifdef CUSTOMIZED_BUSTUB
 
-#define BUSTUB_DECLARE(TypeName)                                                        \
-  namespace bustub {                                                                    \
-  template class TypeName<StandardKey<int>, int, StandardComparator<int>>; /* NOLINT */ \
-  template class TypeName<StringIntKey<65>, int, StringIntComparator<65>>; /* NOLINT */ \
+#define BUSTUB_DECLARE(TypeName)                                                                                   \
+  namespace bustub {                                                                                               \
+  template class TypeName<StandardKey<int>, int, StandardKey<int>::Comparator>;                       /* NOLINT */ \
+  template class TypeName<PairKey<StringKey<65>, int>, int, PairKey<StringKey<65>, int>::Comparator>; /* NOLINT */ \
   }
 
-#define BUSTUB_NTS_DECLARE(TypeName)                                                           \
-  namespace bustub {                                                                           \
-  template class TypeName<StandardKey<int>, int, StandardComparator<int>, false>; /* NOLINT */ \
-  template class TypeName<StringIntKey<65>, int, StringIntComparator<65>, false>; /* NOLINT */ \
+#define BUSTUB_NTS_DECLARE(TypeName)                                                                 \
+  namespace bustub {                                                                                 \
+  template class TypeName<StandardKey<int>, int, StandardKey<int>::Comparator, false>; /* NOLINT */  \
+  template class TypeName<PairKey<StringKey<65>, int>, int, PairKey<StringKey<65>, int>::Comparator, \
+                          false>; /* NOLINT */                                                       \
   }
 
-#define BUSTUB_INTERNAL_DECLARE(TypeName)                                                     \
-  namespace bustub {                                                                          \
-  template class TypeName<StandardKey<int>, page_id_t, StandardComparator<int>>; /* NOLINT */ \
-  template class TypeName<StringIntKey<65>, page_id_t, StringIntComparator<65>>; /* NOLINT */ \
+#define BUSTUB_INTERNAL_DECLARE(TypeName)                                                                          \
+  namespace bustub {                                                                                               \
+  template class TypeName<StandardKey<int>, int, StandardKey<int>::Comparator>;                       /* NOLINT */ \
+  template class TypeName<PairKey<StringKey<65>, int>, int, PairKey<StringKey<65>, int>::Comparator>; /* NOLINT */ \
   }
 
 #endif
