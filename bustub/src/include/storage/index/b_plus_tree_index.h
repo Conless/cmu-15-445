@@ -24,17 +24,18 @@
 
 namespace bustub {
 
-#define BPLUSTREE_INDEX_TYPE BPlusTreeIndex<KeyType, ValueType, KeyComparator>
+#define BPLUSTREE_INDEX_TYPE BPlusTreeIndex<KeyType, ValueType, KeyComparator, true>
 
-template <typename KeyType, typename ValueType, typename KeyComparator, bool isThreadSafe = true>
+template <typename KeyType, typename ValueType, typename KeyComparator = typename KeyType::Comparator,
+          bool isThreadSafe = false>
 class BPlusTreeIndex : public Index {};
 
 INDEX_TEMPLATE_ARGUMENTS
 class BPlusTreeIndex<KeyType, ValueType, KeyComparator, true> : public Index {
  public:
-  BPlusTreeIndex(const std::string &file_name, const KeyComparator &comparator, int leaf_max_size = LEAF_PAGE_SIZE,
-                 int internal_max_size = INTERNAL_PAGE_SIZE, int buffer_pool_size = BUFFER_POOL_SIZE,
-                 int replacer_k = LRUK_REPLACER_K);
+  explicit BPlusTreeIndex(const std::string &file_name, const KeyComparator &comparator = KeyComparator(),
+                          int leaf_max_size = LEAF_PAGE_SIZE, int internal_max_size = INTERNAL_PAGE_SIZE,
+                          int buffer_pool_size = BUFFER_POOL_SIZE, int replacer_k = LRUK_REPLACER_K);
 
   ~BPlusTreeIndex() override;
 

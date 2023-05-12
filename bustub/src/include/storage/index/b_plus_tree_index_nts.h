@@ -20,9 +20,9 @@ namespace bustub {
 INDEX_TEMPLATE_ARGUMENTS
 class BPlusTreeIndex<KeyType, ValueType, KeyComparator, false> : public Index {
  public:
-  BPlusTreeIndex(const std::string &file_name, const KeyComparator &comparator, int leaf_max_size = LEAF_PAGE_SIZE,
-                 int internal_max_size = INTERNAL_PAGE_SIZE, int buffer_pool_size = BUFFER_POOL_SIZE,
-                 int replacer_k = LRUK_REPLACER_K);
+  explicit BPlusTreeIndex(const std::string &file_name, const KeyComparator &comparator = KeyComparator(),
+                          int leaf_max_size = LEAF_PAGE_SIZE, int internal_max_size = INTERNAL_PAGE_SIZE,
+                          int buffer_pool_size = BUFFER_POOL_SIZE, int replacer_k = LRUK_REPLACER_K);
 
   ~BPlusTreeIndex() override;
 
@@ -46,7 +46,7 @@ class BPlusTreeIndex<KeyType, ValueType, KeyComparator, false> : public Index {
   auto GetBeginIterator() -> INDEXITERATOR_TYPE;
 
   auto GetBeginIterator(const KeyType &key) -> INDEXITERATOR_TYPE;
-  
+
   auto GetFirstIterator(const KeyType &key, const KeyComparator &comparator) -> INDEXITERATOR_TYPE;
 
   auto GetIterator(const KeyType &key) -> INDEXITERATOR_TYPE;

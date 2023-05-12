@@ -35,7 +35,7 @@ BPLUSTREE_INDEX_TYPE::BPlusTreeIndex(const std::string &file_name, const KeyComp
   auto header_page_guard = bpm_->FetchPageBasic(HEADER_PAGE_ID);
   auto header_page = header_page_guard.AsMut<BPlusTreeHeaderPage>();
   header_page->root_page_id_ = INVALID_PAGE_ID;
-  container_ = new BPLUSTREE_TYPE("index", HEADER_PAGE_ID, bpm_, comparator, leaf_max_size, internal_max_size);
+  container_ = new BPLUSTREE_TYPE(file_name, HEADER_PAGE_ID, bpm_, comparator, leaf_max_size, internal_max_size);
 }
 
 INDEX_TEMPLATE_ARGUMENTS
