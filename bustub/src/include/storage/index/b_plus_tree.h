@@ -113,6 +113,12 @@ class BPlusTree<KeyType, ValueType, KeyComparator, true> {
   // The iterator containing the first (less or equal) data associated with the given key.
   auto Begin(const KeyType &key) -> INDEXITERATOR_TYPE;
 
+  // Get the first iterator associated with the key
+  auto First(const KeyType &key, const KeyComparator &comparator) -> INDEXITERATOR_TYPE;
+
+  // Get the exact iterator associated with the key
+  auto Find(const KeyType &key) -> INDEXITERATOR_TYPE;
+
  protected:
   /** Create, reset and get root operations */
   // Create a new page with the given page type.
@@ -121,12 +127,12 @@ class BPlusTree<KeyType, ValueType, KeyComparator, true> {
   auto CreateNewRoot(IndexPageType page_type, BPlusTreeHeaderPage *header_page) -> page_id_t;
   // Set root id to new root id by the given header page.
   void SetNewRoot(page_id_t new_root_id, BPlusTreeHeaderPage *header_page);
-  // Get the root write guard, with the read guard of HeaderPage required.
+  // Get the root write guard, with the write guard of HeaderPage required.
   auto GetRootGuardWrite(Context *ctx, bool create_new_root = false) -> WritePageGuard;
   // Fetch the root write guard from the given context.
   auto FetchRootGuardWrite(Context *ctx) -> WritePageGuard;
   // Get the root read guard, with the read guard of HeaderPage required.
-  auto GetRootGuardRead() const -> ReadPageGuard;
+  auto GetRootGuardRead(Context *ctx = nullptr) const -> ReadPageGuard;
 
   /** Insert operation and utils functions  */
   // Insert data optimistically into leaf, assuming that only leaf page will be edited
@@ -153,6 +159,8 @@ class BPlusTree<KeyType, ValueType, KeyComparator, true> {
       -> bool;
 
   /** Remove operation and utils functions  */
+  // Remove data optimistically from leaf, assuming that only leaf page will be edited
+  auto RemoveOptimistic(const KeyType &key) -> std::pair<bool, bool>;
   // Remove the data assoicated with the given key in current internal page, stored in back of ctx->write_set.
   auto RemoveInPage(const KeyType &key, Context *ctx, int index) -> std::pair<bool, KeyType>;
   // Remove the data assoicated with the given key in current leaf page, stored in back of ctx->write_set.
