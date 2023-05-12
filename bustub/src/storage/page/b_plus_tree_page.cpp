@@ -46,6 +46,6 @@ auto BPlusTreePage::SizeNotEnough() const -> bool { return GetSize() < GetMinSiz
 
 auto BPlusTreePage::IsInsertSafe() const -> bool { return GetSize() < GetMaxSize(); }
 
-auto BPlusTreePage::IsRemoveSafe() const -> bool { return GetSize() > GetMaxSize(); }
+auto BPlusTreePage::IsRemoveSafe() const -> bool { return GetSize() > GetMinSize(); }
 
 }  // namespace bustub
