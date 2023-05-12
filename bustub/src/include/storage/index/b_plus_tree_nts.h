@@ -19,10 +19,6 @@ namespace bustub {
  */
 class BasicContext {
  public:
-  // When you insert into / remove from the B+ tree, store the write guard of header page here.
-  // Remember to drop the header page guard and set it to nullopt when you want to unlock all.
-  std::optional<WritePageGuard> header_page_{std::nullopt};
-
   // Save the root page id here so that it's easier to know if the current page is the root page.
   page_id_t root_page_id_{INVALID_PAGE_ID};
 
@@ -74,6 +70,12 @@ class BPlusTree<KeyType, ValueType, KeyComparator, false> {
   // The iterator containing the first (less or equal) data associated with the given key.
   auto Begin(const KeyType &key) -> INDEXITERATOR_TYPE;
 
+  // Get the first iterator associated with the key
+  auto First(const KeyType &key, const KeyComparator &comparator) -> INDEXITERATOR_TYPE;
+
+  // Get the exact iterator associated with the key
+  auto Find(const KeyType &key) -> INDEXITERATOR_TYPE;
+
  protected:
   /** Create, reset and get root operations */
   // Create a new page with the given page type.
@@ -82,14 +84,20 @@ class BPlusTree<KeyType, ValueType, KeyComparator, false> {
   auto CreateNewRoot(IndexPageType page_type) -> page_id_t;
   // Set root id to new root id.
   void SetNewRoot(page_id_t new_root_id);
-  // Get the root guard
-  auto GetRootGuard(bool create_new_root = false) -> BasicPageGuard;
+  // Get the root guard.
+  auto GetRootGuardWrite(BasicContext *ctx, bool create_new_root = false) -> BasicPageGuard;
+  // Fetch the root write guard (in nts bpt, it's the same as the function below).
+  auto FetchRootGuardWrite(BasicContext *ctx) -> BasicPageGuard;
+  // Get the root read guard.
+  auto GetRootGuardRead() const -> BasicPageGuard;
 
   /** Insert operation and utils functions  */
   // Insert data into current internal page, stored in back of ctx->basic_set.
-  auto InsertIntoPage(const KeyType &key, const ValueType &value, BasicContext *ctx, int index) -> std::pair<bool, bool>;
+  auto InsertIntoPage(const KeyType &key, const ValueType &value, BasicContext *ctx, int index)
+      -> std::pair<bool, bool>;
   // Insert data into current leaf page, stored in back of ctx->basic_set.
-  auto InsertIntoLeafPage(const KeyType &key, const ValueType &value, BasicContext *ctx, int index) -> std::pair<bool, bool>;
+  auto InsertIntoLeafPage(const KeyType &key, const ValueType &value, BasicContext *ctx, int index)
+      -> std::pair<bool, bool>;
   // Shift data between leaf page, i.e. send some data away from current page.
   auto ShiftLeafPage(LeafPage *cur_page, InternalPage *last_page, int index) -> bool;
   // Shift data between internal page, i.e. send some data away from current page.

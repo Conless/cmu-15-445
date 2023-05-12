@@ -516,26 +516,33 @@ INDEX_TEMPLATE_ARGUMENTS
 auto BPLUSTREE_NTS_TYPE::Remove(const KeyType &key, Transaction *txn) -> bool {
   // Declaration of context instance.
   BasicContext ctx;
-  BasicPageGuard root_guard = GetRootGuardWrite(&ctx);
-  if (!root_guard.Exist()) {
+  BasicPageGuard root_guard = GetRootGuardWrite(&ctx);  // Get root guard and store header guard in ctx
+  if (!root_guard.Exist()) {                            // If the tree is empty
     return false;
   }
   ctx.basic_set_.push_back(std::move(root_guard));
-  auto res = RemoveInPage(key, &ctx, -1);
-  if (res.first) {
-    BasicPageGuard cur_guard = GetRootGuardWrite(&ctx);
-    auto cur_page = cur_guard.AsMut<BPlusTreePage>();
-    if (!cur_page->IsLeafPage() && cur_page->GetSize() == 1) {
-      //   page_id_t old_root_id = GetRootPageId();
-      auto internal_page = reinterpret_cast<InternalPage *>(cur_page);
-      SetNewRoot(internal_page->ValueAt(0));
-      //   bpm_->DeletePage(old_root_id);
-    }
-    return true;
+  auto remove_res = RemoveInPage(key, &ctx, -1);
+  if (!remove_res.first) {  // If the key doesn't exist
+    return false;
   }
-  return false;
+  BasicPageGuard cur_guard = FetchRootGuardWrite(&ctx);
+  auto cur_page = cur_guard.AsMut<BPlusTreePage>();
+  if (!cur_page->IsLeafPage() && cur_page->GetSize() == 1) {  // The root page has only one child
+    auto internal_page = reinterpret_cast<InternalPage *>(cur_page);
+    SetNewRoot(internal_page->ValueAt(0));  // Set its child as the root
+  }
+  return true;
 }
 
+/**
+ * @brief Remove the data assoicated with the given key in current internal page, stored in back of ctx->basic_set.
+ *
+ * @param key
+ * @param ctx
+ * @param index
+ * @return std::pair<bool, KeyType> with its first value representing the removing result, second value stored the next
+ * key for replacement.
+ */
 INDEX_TEMPLATE_ARGUMENTS
 auto BPLUSTREE_NTS_TYPE::RemoveInPage(const KeyType &key, BasicContext *ctx, int index) -> std::pair<bool, KeyType> {
   auto cur_page = ctx->basic_set_.back().AsMut<BPlusTreePage>();
@@ -543,7 +550,8 @@ auto BPLUSTREE_NTS_TYPE::RemoveInPage(const KeyType &key, BasicContext *ctx, int
     return RemoveInLeafPage(key, ctx, index);
   }
   auto internal_page = reinterpret_cast<InternalPage *>(cur_page);
-  int next_remove_index = internal_page->GetLastIndexLE(key, comparator_);
+  int next_remove_index =
+      internal_page->GetLastIndexLE(key, comparator_);  // Find the last key that is less or equal to the given key
   page_id_t next_page_id = internal_page->ValueAt(next_remove_index);
   auto next_guard = bpm_->FetchPageBasic(next_page_id);
   ctx->basic_set_.push_back(std::move(next_guard));
@@ -552,14 +560,12 @@ auto BPLUSTREE_NTS_TYPE::RemoveInPage(const KeyType &key, BasicContext *ctx, int
   ctx->basic_set_.pop_back();
   if (res.first) {
     if (next_remove_index > 0 && next_remove_index < internal_page->GetSize() &&
-        comparator_(internal_page->KeyAt(next_remove_index), key) == 0) {
+        comparator_(internal_page->KeyAt(next_remove_index), key) == 0) {  // If current key should be replaced
       internal_page->SetKeyAt(next_remove_index, res.second);
     }
-    if (internal_page->SizeNotEnough() && !ctx->basic_set_.empty()) {
+    if (internal_page->SizeNotEnough() && !ctx->basic_set_.empty()) {  // If current page doesn't have enough size
       auto last_page = ctx->basic_set_.back().AsMut<InternalPage>();
-      if (internal_page->GetSize() == 0) {
-        last_page->RemoveData(index);
-      } else if (!ReplenishInternalPage(internal_page, last_page, index)) {
+      if (!ReplenishInternalPage(internal_page, last_page, index)) {
         CoalesceInternalPage(internal_page, last_page, index);
       }
     }
@@ -567,59 +573,84 @@ auto BPLUSTREE_NTS_TYPE::RemoveInPage(const KeyType &key, BasicContext *ctx, int
   return res;
 }
 
+/**
+ * @brief Remove the data assoicated with the given key in current leaf page, stored in back of ctx->write_set.
+ *
+ * @param key
+ * @param ctx
+ * @param index
+ * @return std::pair<bool, KeyType> with its first value representing the removing result, second value stored the next
+ * key for replacement.
+ */
 INDEX_TEMPLATE_ARGUMENTS
 auto BPLUSTREE_NTS_TYPE::RemoveInLeafPage(const KeyType &key, BasicContext *ctx, int index)
     -> std::pair<bool, KeyType> {
   auto leaf_page = ctx->basic_set_.back().AsMut<LeafPage>();
-  int remove_index = leaf_page->RemoveData(key, comparator_);
-  if (remove_index == -1) {
+  int remove_index = leaf_page->RemoveData(key, comparator_);  // The index of the key to remove
+  if (remove_index == -1) {                                    // Doesn't exist
     return {false, KeyType()};
   }
   std::pair<bool, KeyType> res = {true, KeyType()};
-  if (remove_index == 0 && leaf_page->GetSize() != 0) {
+  if (remove_index == 0 && leaf_page->GetSize() != 0) {  // Find the replacement key
     res.second = leaf_page->KeyAt(remove_index);
   }
   BasicPageGuard cur_guard = std::move(ctx->basic_set_.back());
   ctx->basic_set_.pop_back();
   if (leaf_page->SizeNotEnough() && !ctx->basic_set_.empty()) {
     auto last_page = ctx->basic_set_.back().AsMut<InternalPage>();
-    if (leaf_page->GetSize() == 0) {
-      last_page->RemoveData(index);
-    } else if (!ReplenishLeafPage(leaf_page, last_page, index)) {
+    if (!ReplenishLeafPage(leaf_page, last_page, index)) {
       CoalesceLeafPage(leaf_page, last_page, index);
     }
   }
   return res;
 }
 
+/**
+ * @brief Replenish current leaf page, i.e. borrow some data to current page.
+ *
+ * @param cur_page
+ * @param last_page
+ * @param index
+ * @return true if an adjacent page is available
+ * @return false otherwise
+ */
 INDEX_TEMPLATE_ARGUMENTS
 auto BPLUSTREE_NTS_TYPE::ReplenishLeafPage(LeafPage *cur_page, InternalPage *last_page, int index) -> bool {
-  bool replenished = false;
-  if (index != last_page->GetSize() - 1) {
+  bool replenished = false;                 // Whether the page is replenished
+  if (index != last_page->GetSize() - 1) {  // Try to borrow data from the next page
     page_id_t next_leaf_id = last_page->ValueAt(index + 1);
     BasicPageGuard next_leaf_guard = bpm_->FetchPageBasic(next_leaf_id);
     auto next_leaf_page = next_leaf_guard.AsMut<LeafPage>();
     int size_diff = next_leaf_page->GetSize() - cur_page->GetSize();
     if (size_diff >= 2) {
       next_leaf_page->CopyFirstNTo(size_diff / 2, cur_page);
-      last_page->SetKeyAt(index + 1, next_leaf_page->KeyAt(0));
+      last_page->SetKeyAt(index + 1, next_leaf_page->KeyAt(0));  // Change the key
       replenished = true;
     }
   }
-  if (!replenished && index != 0) {
+  if (!replenished && index != 0) {  // Try to borrow data from the last page
     page_id_t last_leaf_id = last_page->ValueAt(index - 1);
     BasicPageGuard last_leaf_guard = bpm_->FetchPageBasic(last_leaf_id);
     auto last_leaf_page = last_leaf_guard.AsMut<LeafPage>();
     int size_diff = last_leaf_page->GetSize() - cur_page->GetSize();
     if (size_diff >= 2) {
       last_leaf_page->CopyLastNTo(size_diff / 2, cur_page);
-      last_page->SetKeyAt(index, cur_page->KeyAt(0));
+      last_page->SetKeyAt(index, cur_page->KeyAt(0));  // Change key
       replenished = true;
     }
   }
   return replenished;
 }
 
+/**
+ * @brief Replenish current internal page, i.e. borrow some data to current page.
+ *
+ * @param cur_page
+ * @param last_page
+ * @param index
+ * @return true if an adjacent page is available
+ * @return false otherwise
+ */
 INDEX_TEMPLATE_ARGUMENTS
 auto BPLUSTREE_NTS_TYPE::ReplenishInternalPage(InternalPage *cur_page, InternalPage *last_page, int index) -> bool {
   bool replenished = false;
@@ -629,9 +660,9 @@ auto BPLUSTREE_NTS_TYPE::ReplenishInternalPage(InternalPage *cur_page, InternalP
     auto next_internal_page = next_internal_guard.AsMut<InternalPage>();
     int size_diff = next_internal_page->GetSize() - cur_page->GetSize();
     if (size_diff >= 2) {
-      next_internal_page->SetKeyAt(0, last_page->KeyAt(index + 1));
-      next_internal_page->CopyFirstNTo(size_diff / 2, cur_page);
-      last_page->SetKeyAt(index + 1, next_internal_page->KeyAt(0));
+      next_internal_page->SetKeyAt(0, last_page->KeyAt(index + 1));  // Store the key at a temporary place
+      next_internal_page->CopyFirstNTo(size_diff / 2, cur_page);     // Copy the keys
+      last_page->SetKeyAt(index + 1, next_internal_page->KeyAt(0));  // Change the key
       next_internal_page->SetKeyAt(0, KeyType());
       replenished = true;
     }
@@ -652,19 +683,28 @@ auto BPLUSTREE_NTS_TYPE::ReplenishInternalPage(InternalPage *cur_page, InternalP
   return replenished;
 }
 
+/**
+ * @brief Coalesce current leaf page with an adjacent page.
+ *
+ * @param cur_page
+ * @param last_page
+ * @param index
+ * @return true if split succeeds
+ * @return false otherwise
+ */
 INDEX_TEMPLATE_ARGUMENTS
 auto BPLUSTREE_NTS_TYPE::CoalesceLeafPage(LeafPage *cur_page, InternalPage *last_page, int index) -> bool {
   bool coalesced = false;
-  if (index != last_page->GetSize() - 1) {
+  if (index != last_page->GetSize() - 1) {  // Coalescec with the next page
     page_id_t next_leaf_id = last_page->ValueAt(index + 1);
     BasicPageGuard next_leaf_guard = bpm_->FetchPageBasic(next_leaf_id);
     auto next_leaf_page = next_leaf_guard.AsMut<LeafPage>();
     int size_sum = next_leaf_page->GetSize() + cur_page->GetSize();
     if (size_sum <= leaf_max_size_) {
-      next_leaf_page->CopyFirstNTo(next_leaf_page->GetSize(), cur_page);
+      next_leaf_page->CopyFirstNTo(next_leaf_page->GetSize(), cur_page);  // Copy all the data to current page
       last_page->RemoveData(index + 1);
-      cur_page->SetNextPageId(next_leaf_page->GetNextPageId());
-      //   bpm_->DeletePage(next_leaf_id);
+      cur_page->SetNextPageId(next_leaf_page->GetNextPageId());  // Update next_page_id
+      bpm_->DeletePage(next_leaf_id);
       coalesced = true;
     }
   }
@@ -674,10 +714,10 @@ auto BPLUSTREE_NTS_TYPE::CoalesceLeafPage(LeafPage *cur_page, InternalPage *last
     auto last_leaf_page = last_leaf_guard.AsMut<LeafPage>();
     int size_sum = last_leaf_page->GetSize() + cur_page->GetSize();
     if (size_sum <= leaf_max_size_) {
-      cur_page->CopyFirstNTo(cur_page->GetSize(), last_leaf_page);
-      last_page->RemoveData(index);
+      cur_page->CopyFirstNTo(cur_page->GetSize(), last_leaf_page);  // Copy all the data to last page
+      auto remove_res = last_page->RemoveData(index);
       last_leaf_page->SetNextPageId(cur_page->GetNextPageId());
-      //   bpm_->DeletePage(cur_page->);
+      bpm_->DeletePage(remove_res.second);
       coalesced = true;
     }
   }
@@ -695,7 +735,7 @@ auto BPLUSTREE_NTS_TYPE::CoalesceInternalPage(InternalPage *cur_page, InternalPa
     if (size_sum <= internal_max_size_) {
       next_internal_page->SetKeyAt(0, last_page->RemoveData(index + 1).first);
       next_internal_page->CopyFirstNTo(next_internal_page->GetSize(), cur_page);
-      //   bpm_->DeletePage(next_leaf_id);
+        bpm_->DeletePage(next_internal_id);
       coalesced = true;
     }
   }
@@ -705,9 +745,10 @@ auto BPLUSTREE_NTS_TYPE::CoalesceInternalPage(InternalPage *cur_page, InternalPa
     auto last_internal_page = last_internal_guard.AsMut<InternalPage>();
     int size_sum = last_internal_page->GetSize() + cur_page->GetSize();
     if (size_sum <= internal_max_size_) {
-      cur_page->SetKeyAt(0, last_page->RemoveData(index).first);
+      auto remove_res = last_page->RemoveData(index);
+      cur_page->SetKeyAt(0, remove_res.first);
       cur_page->CopyFirstNTo(cur_page->GetSize(), last_internal_page);
-      //   bpm_->DeletePage(cur_page->);
+      bpm_->DeletePage(remove_res.second);
       coalesced = true;
     }
   }
@@ -730,8 +771,8 @@ auto BPLUSTREE_NTS_TYPE::Begin() -> INDEXITERATOR_TYPE {
   }
   BasicPageGuard cur_guard = bpm_->FetchPageBasic(next_page_id);
   auto cur_page = cur_guard.As<BPlusTreePage>();
-  while (!cur_page->IsLeafPage()) {
-    next_page_id = reinterpret_cast<const InternalPage *>(cur_page)->ValueAt(0);
+  while (!cur_page->IsLeafPage()) {                                               // Current page isn't leaf page
+    next_page_id = reinterpret_cast<const InternalPage *>(cur_page)->ValueAt(0);  // The first child page
     cur_guard = bpm_->FetchPageBasic(next_page_id);
     cur_page = cur_guard.As<BPlusTreePage>();
   }
@@ -762,7 +803,7 @@ auto BPLUSTREE_NTS_TYPE::Begin(const KeyType &key) -> INDEXITERATOR_TYPE {
   if (cur_page->GetSize() == 0) {
     return End();
   }
-  int index = reinterpret_cast<const LeafPage *>(cur_page)->GetIndexE(key, comparator_);
+  int index = reinterpret_cast<const LeafPage *>(cur_page)->GetLastIndexLE(key, comparator_);
   if (index == -1) {
     return End();
   }
@@ -776,6 +817,68 @@ auto BPLUSTREE_NTS_TYPE::Begin(const KeyType &key) -> INDEXITERATOR_TYPE {
  */
 INDEX_TEMPLATE_ARGUMENTS
 auto BPLUSTREE_NTS_TYPE::End() -> INDEXITERATOR_TYPE { return INDEXITERATOR_TYPE(INVALID_PAGE_ID, 0, bpm_); }
+
+INDEX_TEMPLATE_ARGUMENTS
+auto BPLUSTREE_NTS_TYPE::First(const KeyType &key, const KeyComparator &comparator) -> INDEXITERATOR_TYPE {
+  // std::cout << "Using first " << key << '\n'; // debug message
+  page_id_t next_page_id = GetRootPageId();
+  if (next_page_id == INVALID_PAGE_ID) {
+    return End();
+  }
+  BasicPageGuard cur_guard = bpm_->FetchPageBasic(next_page_id);
+  auto cur_page = cur_guard.As<BPlusTreePage>();
+  while (!cur_page->IsLeafPage()) {
+    next_page_id = reinterpret_cast<const InternalPage *>(cur_page)->GetLastIndexL(key, comparator);
+    cur_guard = bpm_->FetchPageBasic(next_page_id);
+    cur_page = cur_guard.As<BPlusTreePage>();
+  }
+  if (cur_page->GetSize() == 0) {
+    return End();
+  }
+  auto leaf_page = reinterpret_cast<const LeafPage *>(cur_page);
+  int index = leaf_page->GetLastIndexL(key, comparator) + 1;
+  if (index < leaf_page->GetSize()) {
+    if (comparator(leaf_page->KeyAt(index), key) == 0) {
+      return INDEXITERATOR_TYPE(next_page_id, index, bpm_);
+    }
+    return End();
+  }
+  next_page_id = leaf_page->GetNextPageId();
+  if (next_page_id == INVALID_PAGE_ID) {
+    return End();
+  }
+  cur_guard = bpm_->FetchPageBasic(next_page_id);
+  leaf_page = cur_guard.As<LeafPage>();
+  if (comparator(leaf_page->KeyAt(0), key) == 0) {
+    return INDEXITERATOR_TYPE(next_page_id, 0, bpm_);
+  }
+  return End();
+}
+
+INDEX_TEMPLATE_ARGUMENTS
+auto BPLUSTREE_NTS_TYPE::Find(const KeyType &key) -> INDEXITERATOR_TYPE {
+  // std::cout << "Using find " << key << '\n'; // debug message
+  page_id_t next_page_id = GetRootPageId();
+  if (next_page_id == INVALID_PAGE_ID) {
+    return End();
+  }
+  BasicPageGuard cur_guard = bpm_->FetchPageBasic(next_page_id);
+  auto cur_page = cur_guard.As<BPlusTreePage>();
+  while (!cur_page->IsLeafPage()) {
+    next_page_id = reinterpret_cast<const InternalPage *>(cur_page)->GetLastIndexLE(key, comparator_);
+    cur_guard = bpm_->FetchPageBasic(next_page_id);
+    cur_page = cur_guard.As<BPlusTreePage>();
+  }
+  if (cur_page->GetSize() == 0) {
+    return End();
+  }
+  auto leaf_page = reinterpret_cast<const LeafPage *>(cur_page);
+  int index = leaf_page->GetLastIndexLE(key, comparator_);
+  if (index == -1 || comparator_(leaf_page->KeyAt(index), key) != 0) {
+    return End();
+  }
+  return INDEXITERATOR_TYPE(next_page_id, index, bpm_);
+}
 
 /*****************************************************************************
  * BASIC OPERATIONS
