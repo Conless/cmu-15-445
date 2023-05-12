@@ -39,11 +39,11 @@ void write(int num) {  // NOLINT
 }
 
 auto main() -> int {
-  //   std::ofstream out("test.log");
+  // std::ofstream out("test.log");
   std::ios::sync_with_stdio(false);
   StringIntComparator<65> comp(ComparatorType::CompareData);
   StringIntComparator<65> comp_key(ComparatorType::CompareKey);
-  BPlusTreeIndex<StringIntKey<65>, int, StringIntComparator<65>, false> tree("haha", comp, 150, 150, 100, 10);
+  BPlusTreeIndex<StringIntKey<65>, int, StringIntComparator<65>, false> tree("haha", comp);
   StringIntKey<65> key_value;
   int t;
   read(t);

@@ -12,6 +12,7 @@
 
 #include <algorithm>
 #include <cstdio>
+#include <random>
 
 #include "buffer/buffer_pool_manager.h"
 #include "gtest/gtest.h"
@@ -34,14 +35,14 @@ TEST(BPlusTreeTests, DeleteTestCustom1) {
   page_id_t page_id;
   auto header_page = bpm->NewPage(&page_id);
   // create b+ tree
-  BPlusTree<GenericKey<8>, RID, GenericComparator<8>> tree("foo_pk", header_page->GetPageId(), bpm, comparator, 4, 4);
+  BPlusTree<GenericKey<8>, RID, GenericComparator<8>> tree("foo_pk", header_page->GetPageId(), bpm, comparator, 10, 10);
   GenericKey<8> index_key;
   RID rid;
   // create transaction
   auto *transaction = new Transaction(0);
 
   std::vector<int64_t> keys;
-  for (int i = 1; i <= 20; i++) {
+  for (int i = 1; i <= 50; i++) {
     keys.push_back(i);
   }
   for (auto key : keys) {
@@ -64,6 +65,7 @@ TEST(BPlusTreeTests, DeleteTestCustom1) {
 
   std::cout << tree.DrawBPlusTree() << std::endl;
 
+  std::shuffle(keys.begin(), keys.end(), std::mt19937(std::random_device()()));
   for (auto key : keys) {
     index_key.SetFromInteger(key);
     tree.Remove(index_key, transaction);
@@ -86,7 +88,7 @@ TEST(BPlusTreeTests, DeleteTest1) {
   page_id_t page_id;
   auto header_page = bpm->NewPage(&page_id);
   // create b+ tree
-  BPlusTree<GenericKey<8>, RID, GenericComparator<8>> tree("foo_pk", header_page->GetPageId(), bpm, comparator);
+  BPlusTree<GenericKey<8>, RID, GenericComparator<8>> tree("foo_pk", header_page->GetPageId(), bpm, comparator, 2, 3);
   GenericKey<8> index_key;
   RID rid;
   // create transaction
@@ -155,7 +157,7 @@ TEST(BPlusTreeTests, DeleteTest2) {
   page_id_t page_id;
   auto header_page = bpm->NewPage(&page_id);
   // create b+ tree
-  BPlusTree<GenericKey<8>, RID, GenericComparator<8>> tree("foo_pk", header_page->GetPageId(), bpm, comparator);
+  BPlusTree<GenericKey<8>, RID, GenericComparator<8>> tree("foo_pk", header_page->GetPageId(), bpm, comparator, 2, 3);
   GenericKey<8> index_key;
   RID rid;
   // create transaction
@@ -167,6 +169,7 @@ TEST(BPlusTreeTests, DeleteTest2) {
     rid.Set(static_cast<int32_t>(key >> 32), value);
     index_key.SetFromInteger(key);
     tree.Insert(index_key, rid, transaction);
+    tree.Print(bpm);
   }
 
   std::vector<RID> rids;
@@ -180,11 +183,17 @@ TEST(BPlusTreeTests, DeleteTest2) {
     EXPECT_EQ(rids[0].GetSlotNum(), value);
   }
 
-  std::vector<int64_t> remove_keys = {1, 5, 3, 4};
+  std::vector<int64_t> remove_keys = {1, 5, 3, 4, 10};
   for (auto key : remove_keys) {
     index_key.SetFromInteger(key);
     tree.Remove(index_key, transaction);
+    tree.Print(bpm);
+    std::cout << tree.DrawBPlusTree() << '\n';
   }
+
+  index_key.SetFromInteger(2);
+  auto it = tree.Begin(index_key);
+  std::cout << (*it).first << '\n';
 
   int64_t size = 0;
   bool is_present;

@@ -52,6 +52,7 @@ TEST(BPlusTreeTests, ScaleTest) {  // NOLINT
   for (int64_t key = 1; key < scale; key++) {
     keys.push_back(key);
   }
+  // std::ofstream out("sqt.txt");
 
   // randomized the insertion order
   auto rng = std::default_random_engine{};
@@ -61,6 +62,7 @@ TEST(BPlusTreeTests, ScaleTest) {  // NOLINT
     rid.Set(static_cast<int32_t>(key >> 32), value);
     index_key.SetFromInteger(key);
     tree.Insert(index_key, rid, transaction);
+    // out << tree.DrawBPlusTree() << '\n';
   }
   std::vector<RID> rids;
   for (auto key : keys) {

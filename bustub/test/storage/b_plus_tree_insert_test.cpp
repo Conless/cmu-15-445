@@ -25,7 +25,7 @@ namespace bustub {
 
 using bustub::DiskManagerUnlimitedMemory;
 
-TEST(BPlusTreeTests, DISABLED_InsertTestCustom1) {
+TEST(BPlusTreeTests, InsertTestCustom1) {
   // create KeyComparator and index schema
   auto key_schema = ParseCreateStatement("a bigint");
   GenericComparator<8> comparator(key_schema.get());
@@ -36,14 +36,14 @@ TEST(BPlusTreeTests, DISABLED_InsertTestCustom1) {
   page_id_t page_id;
   auto header_page = bpm->NewPage(&page_id);
   // create b+ tree
-  BPlusTree<GenericKey<8>, RID, GenericComparator<8>> tree("foo_pk", header_page->GetPageId(), bpm, comparator, 80, 60);
+  BPlusTree<GenericKey<8>, RID, GenericComparator<8>> tree("foo_pk", header_page->GetPageId(), bpm, comparator, 10, 10);
   GenericKey<8> index_key;
   RID rid;
   // create transaction
   auto *transaction = new Transaction(0);
 
   std::vector<int64_t> keys;
-  int n = 1e5;
+  int n = 100;
   keys.reserve(n);
   for (int64_t i = 1; i <= n; i++) {
     keys.push_back(n - i + 1);
@@ -52,10 +52,10 @@ TEST(BPlusTreeTests, DISABLED_InsertTestCustom1) {
   for (auto key : keys) {
     int64_t value = key & 0xFFFFFFFF;
     rid.Set(static_cast<int32_t>(key >> 32), value);
-    index_key.SetFromInteger(key / 5);
+    index_key.SetFromInteger(key);
     tree.Insert(index_key, rid, transaction);
   }
-  //   std::cout << tree.DrawBPlusTree() << std::endl;
+  std::cout << tree.DrawBPlusTree() << std::endl;
   bpm->UnpinPage(HEADER_PAGE_ID, true);
   delete transaction;
   delete bpm;
