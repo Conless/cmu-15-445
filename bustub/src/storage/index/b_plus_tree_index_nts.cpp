@@ -96,6 +96,14 @@ auto BPLUSTREE_INDEX_NTS_TYPE::GetBeginIterator(const KeyType &key) -> INDEXITER
 }
 
 INDEX_TEMPLATE_ARGUMENTS
+auto BPLUSTREE_INDEX_NTS_TYPE::GetFirstIterator(const KeyType &key, const KeyComparator &comparator) -> INDEXITERATOR_TYPE {
+  return container_->First(key, comparator);
+}
+
+INDEX_TEMPLATE_ARGUMENTS
+auto BPLUSTREE_INDEX_NTS_TYPE::GetIterator(const KeyType &key) -> INDEXITERATOR_TYPE { return container_->Find(key); }
+
+INDEX_TEMPLATE_ARGUMENTS
 auto BPLUSTREE_INDEX_NTS_TYPE::GetEndIterator() -> INDEXITERATOR_TYPE { return container_->End(); }
 
 }  // namespace bustub

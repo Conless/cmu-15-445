@@ -19,6 +19,7 @@
 #include "container/hash/hash_function.h"
 #include "storage/index/b_plus_tree.h"
 #include "storage/index/index.h"
+#include "storage/index/index_iterator.h"
 #include "storage/page/b_plus_tree_page.h"
 
 namespace bustub {
@@ -31,7 +32,11 @@ class BPlusTreeIndex : public Index {};
 INDEX_TEMPLATE_ARGUMENTS
 class BPlusTreeIndex<KeyType, ValueType, KeyComparator, true> : public Index {
  public:
-  BPlusTreeIndex();
+  BPlusTreeIndex(const std::string &file_name, const KeyComparator &comparator, int leaf_max_size = LEAF_PAGE_SIZE,
+                 int internal_max_size = INTERNAL_PAGE_SIZE, int buffer_pool_size = BUFFER_POOL_SIZE,
+                 int replacer_k = LRUK_REPLACER_K);
+
+  ~BPlusTreeIndex() override;
 
   BPlusTreeIndex(std::unique_ptr<IndexMetadata> &&metadata, BufferPoolManager *buffer_pool_manager);
 
@@ -41,21 +46,29 @@ class BPlusTreeIndex<KeyType, ValueType, KeyComparator, true> : public Index {
 
   void ScanKey(const Tuple &key, std::vector<RID> *result, Transaction *transaction) override;
 
-  auto Insert(const KeyType &key, const ValueType &rid, Transaction * = nullptr) -> bool;
+  auto Insert(const KeyType &key, const ValueType &value, Transaction *transaction = nullptr) -> bool;
 
   void Delete(const KeyType &key, Transaction *transaction = nullptr);
 
-  void Search(const KeyType &key, std::vector<ValueType> *result, Transaction *transaction = nullptr);
+  void Search(const KeyType &key, vector<ValueType> *result, Transaction *transaction = nullptr);
+
+  void Search(const KeyType &key, vector<ValueType> *result, const KeyComparator &comparator,
+              Transaction *transaction = nullptr);
 
   auto GetBeginIterator() -> INDEXITERATOR_TYPE;
 
   auto GetBeginIterator(const KeyType &key) -> INDEXITERATOR_TYPE;
 
+  auto GetFirstIterator(const KeyType &key, const KeyComparator &comparator) -> INDEXITERATOR_TYPE;
+
+  auto GetIterator(const KeyType &key) -> INDEXITERATOR_TYPE;
+
   auto GetEndIterator() -> INDEXITERATOR_TYPE;
 
- protected:
-  // container
-  std::shared_ptr<BPlusTree<KeyType, ValueType, KeyComparator>> container_;
+ public:
+  DiskManager *disk_manager_;
+  BufferPoolManager *bpm_;
+  BPlusTree<KeyType, ValueType, KeyComparator, true> *container_;
 };
 
 /** We only support index table with one integer key for now in BusTub. Hardcode everything here. */

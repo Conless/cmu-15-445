@@ -3,6 +3,7 @@
 #include "buffer/buffer_pool_manager.h"
 #include "storage/disk/disk_manager.h"
 #include "storage/index/b_plus_tree_index.h"
+#include "storage/index/b_plus_tree_nts.h"
 #include "storage/page/b_plus_tree_page.h"
 
 #define BPLUSTREE_INDEX_NTS_TYPE BPlusTreeIndex<KeyType, ValueType, KeyComparator, false>
@@ -45,6 +46,10 @@ class BPlusTreeIndex<KeyType, ValueType, KeyComparator, false> : public Index {
   auto GetBeginIterator() -> INDEXITERATOR_TYPE;
 
   auto GetBeginIterator(const KeyType &key) -> INDEXITERATOR_TYPE;
+  
+  auto GetFirstIterator(const KeyType &key, const KeyComparator &comparator) -> INDEXITERATOR_TYPE;
+
+  auto GetIterator(const KeyType &key) -> INDEXITERATOR_TYPE;
 
   auto GetEndIterator() -> INDEXITERATOR_TYPE;
 
