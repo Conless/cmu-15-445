@@ -32,7 +32,7 @@ class IndexIterator {
 
   auto IsEnd() const -> bool;
 
-  auto operator*() -> const MappingType &;
+  auto operator*() -> MappingType &;
 
   auto operator++() -> IndexIterator &;
 
@@ -47,7 +47,7 @@ class IndexIterator {
 
  private:
   // add your own private member variables here
-  const LeafPage *cur_page_;
+  LeafPage *cur_page_;
   page_id_t page_id_;
   int index_in_page_;
   BufferPoolManager *bpm_;

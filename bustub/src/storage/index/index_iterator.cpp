@@ -18,7 +18,7 @@ INDEX_TEMPLATE_ARGUMENTS
 INDEXITERATOR_TYPE::IndexIterator(page_id_t page_id, int index_in_page, BufferPoolManager *bpm)
     : page_id_(page_id), index_in_page_(index_in_page), bpm_(bpm) {
   if (page_id_ != INVALID_PAGE_ID) {
-    cur_page_ = bpm_->FetchPageBasic(page_id_).As<LeafPage>();
+    cur_page_ = bpm_->FetchPageBasic(page_id_).AsMut<LeafPage>();
   } else {
     cur_page_ = nullptr;
   }
@@ -31,7 +31,7 @@ INDEX_TEMPLATE_ARGUMENTS
 auto INDEXITERATOR_TYPE::IsEnd() const -> bool { return page_id_ == INVALID_PAGE_ID; }
 
 INDEX_TEMPLATE_ARGUMENTS
-auto INDEXITERATOR_TYPE::operator*() -> const MappingType & {
+auto INDEXITERATOR_TYPE::operator*() -> MappingType & {
   if (IsEnd()) {
     throw Exception(ExceptionType::OUT_OF_RANGE, "invalid iterator");
   }
@@ -50,7 +50,7 @@ auto INDEXITERATOR_TYPE::operator++() -> INDEXITERATOR_TYPE & {
     if (cur_page_->GetNextPageId() != INVALID_PAGE_ID) {
       page_id_ = cur_page_->GetNextPageId();
       BasicPageGuard page_guard = bpm_->FetchPageBasic(page_id_);
-      cur_page_ = page_guard.As<LeafPage>();
+      cur_page_ = page_guard.AsMut<LeafPage>();
       index_in_page_ = 0;
     } else {
       page_id_ = INVALID_PAGE_ID;
