@@ -142,7 +142,7 @@ void B_PLUS_TREE_LEAF_PAGE_TYPE::SetValueAt(int index, const ValueType &value) {
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-auto B_PLUS_TREE_LEAF_PAGE_TYPE::DataAt(int index) const -> const MappingType & {
+auto B_PLUS_TREE_LEAF_PAGE_TYPE::DataAt(int index) -> MappingType & {
   if (index < 0 || index >= GetSize()) {
     std::cout << "size: " << GetSize() << '\n';
     throw Exception(ExceptionType::OUT_OF_RANGE, "index out of range in leaf");

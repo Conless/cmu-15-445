@@ -95,7 +95,7 @@ class BPlusTreeLeafPage : public BPlusTreePage {
    */
   void SetValueAt(int index, const ValueType &value);
 
-  auto DataAt(int index) const -> const MappingType &;
+  auto DataAt(int index) -> MappingType &;
 
   /**
    * @brief Set the Data At object
