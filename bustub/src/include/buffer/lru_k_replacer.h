@@ -27,8 +27,8 @@
 #ifdef REPLACE_STL
 #include "container/stl/list.h"
 #include "container/stl/unordered_map.h"
-using sjtu::list;           // NOLINT
-using sjtu::unordered_map;  // NOLINT
+using conless::list;           // NOLINT
+using conless::unordered_map;  // NOLINT
 #else
 using std::list;           // NOLINT
 using std::unordered_map;  // NOLINT

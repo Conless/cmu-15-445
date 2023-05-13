@@ -4,7 +4,7 @@
 
 #ifdef REPLACE_STL
 #include "container/stl/vector.h"
-using sjtu::vector;  // NOLINT
+using conless::vector;  // NOLINT
 #else
 using std::vector;  // NOLINT
 #endif

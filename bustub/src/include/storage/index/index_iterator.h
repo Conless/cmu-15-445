@@ -15,6 +15,7 @@
 #pragma once
 #include "buffer/buffer_pool_manager.h"
 #include "storage/page/b_plus_tree_leaf_page.h"
+#include "storage/page/b_plus_tree_page.h"
 #include "storage/page/page_guard.h"
 
 namespace bustub {
@@ -33,6 +34,8 @@ class IndexIterator {
   auto IsEnd() const -> bool;
 
   auto operator*() -> MappingType &;
+
+  auto operator->() -> MappingType *;
 
   auto operator++() -> IndexIterator &;
 

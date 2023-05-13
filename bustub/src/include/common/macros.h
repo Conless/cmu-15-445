@@ -45,21 +45,27 @@ namespace bustub {
 
 #define BUSTUB_DECLARE(TypeName)                                                                                   \
   namespace bustub {                                                                                               \
+  using namespace conless;                                                                            /* NOLINT */ \
   template class TypeName<StandardKey<int>, int, StandardKey<int>::Comparator>;                       /* NOLINT */ \
   template class TypeName<PairKey<StringKey<65>, int>, int, PairKey<StringKey<65>, int>::Comparator>; /* NOLINT */ \
+  template class TypeName<StringKey<20>, UserInfo, StringKey<20>::Comparator>;                        /* NOLINT */ \
   }
 
 #define BUSTUB_NTS_DECLARE(TypeName)                                                                 \
   namespace bustub {                                                                                 \
+  using namespace conless;                                                             /* NOLINT */  \
   template class TypeName<StandardKey<int>, int, StandardKey<int>::Comparator, false>; /* NOLINT */  \
   template class TypeName<PairKey<StringKey<65>, int>, int, PairKey<StringKey<65>, int>::Comparator, \
-                          false>; /* NOLINT */                                                       \
+                          false>;                                                     /* NOLINT */   \
+  template class TypeName<StringKey<20>, UserInfo, StringKey<20>::Comparator, false>; /* NOLINT */   \
   }
 
 #define BUSTUB_INTERNAL_DECLARE(TypeName)                                                                          \
   namespace bustub {                                                                                               \
+  using namespace conless;                                                                            /* NOLINT */ \
   template class TypeName<StandardKey<int>, int, StandardKey<int>::Comparator>;                       /* NOLINT */ \
   template class TypeName<PairKey<StringKey<65>, int>, int, PairKey<StringKey<65>, int>::Comparator>; /* NOLINT */ \
+  template class TypeName<StringKey<20>, int, StringKey<20>::Comparator>;                             /* NOLINT */ \
   }
 
 #endif

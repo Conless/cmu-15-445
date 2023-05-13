@@ -4,10 +4,11 @@
 #include <random>
 
 #include "storage/index/b_plus_tree_index_nts.h"
-#include "storage/index/custom_key.h"
+#include "container/custom_key.h"
 // #include "test_util.h"  // NOLINT
 
 using namespace bustub;  // NOLINT
+using namespace conless; // NOLINT
 
 void read(char *str) {  // NOLINT
   do {

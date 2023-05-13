@@ -6,6 +6,7 @@
 #include "common/config.h"
 #include "common/exception.h"
 #include "storage/index/index_iterator.h"
+#include "storage/page/b_plus_tree_page.h"
 #include "storage/page/page_guard.h"
 
 namespace bustub {
@@ -35,8 +36,15 @@ auto INDEXITERATOR_TYPE::operator*() -> MappingType & {
   if (IsEnd()) {
     throw Exception(ExceptionType::OUT_OF_RANGE, "invalid iterator");
   }
-  std::cout << "Accessing page " << page_id_ << " at " << index_in_page_ << '\n';
   return cur_page_->DataAt(index_in_page_);
+}
+
+INDEX_TEMPLATE_ARGUMENTS
+auto INDEXITERATOR_TYPE::operator->() -> MappingType * {
+  if (IsEnd()) {
+    throw Exception(ExceptionType::OUT_OF_RANGE, "invalid iterator");
+  }
+  return &(cur_page_->DataAt(index_in_page_));
 }
 
 INDEX_TEMPLATE_ARGUMENTS
@@ -44,7 +52,6 @@ auto INDEXITERATOR_TYPE::operator++() -> INDEXITERATOR_TYPE & {
   if (IsEnd()) {
     return *this;
   }
-  std::cout << "Self-increasing page " << page_id_ << " at " << index_in_page_ << '\n';
   index_in_page_++;
   if (index_in_page_ == cur_page_->GetSize()) {
     if (cur_page_->GetNextPageId() != INVALID_PAGE_ID) {
